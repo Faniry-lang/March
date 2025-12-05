@@ -1,4 +1,4 @@
-package march.dev;
+package march.sample;
 
 /**
  * Hello world!

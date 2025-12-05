@@ -6,6 +6,7 @@ import java.lang.reflect.Parameter;
 import java.lang.reflect.Type;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -16,9 +17,9 @@ import march.dev.data.Tool;
 
 public class ProviderScan {
 
-    public static List<Tool> scanTools(String packageName) throws Exception {
+    public static Map<String, Tool> scanTools(String packageName) throws Exception {
         
-        List<Tool> tools = new ArrayList<>();
+        Map<String, Tool> tools = new HashMap<>();
         ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
         String path = packageName.replace('.', '/');
         URL resource = classLoader.getResource(path);
@@ -52,8 +53,11 @@ public class ProviderScan {
 
                             Type returnType = method.getGenericReturnType();
 
-                            Tool tool = new Tool(name, description, providerName, method, paramMap, returnType);    
-                            tools.add(tool);                    
+                            Tool tool = new Tool(name, description, providerName, method, paramMap, returnType);  
+                            if(tools.containsKey(name)) {
+                                throw new Exception("Tool with name '"+name+"' already exists");
+                            }  
+                            tools.put(name, tool);                    
                         }       
                     }
                 }
