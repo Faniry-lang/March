@@ -2,28 +2,46 @@ package march.sample;
 
 import java.util.Map;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import march.dev.chat.LlmService;
 import march.dev.data.Tool;
+import march.dev.data.ToolRegistry;
+import march.dev.utils.MethodRunner;
 import march.dev.utils.ProviderScan;
 
-/**
- * Hello world!
- */
 public class App {
     public static void main(String[] args) {
 
         try {
+            ObjectMapper objectMapper = new ObjectMapper();
+            ToolRegistry toolRegistry = new ToolRegistry();
+            MethodRunner methodRunner = new MethodRunner();
+
             Map<String, Tool> tools = ProviderScan.scanTools("march.sample.services");
-            for(Map.Entry<String, Tool> entry : tools.entrySet()) {
-                System.out.println("[Tool name] "+entry.getKey());
-                System.out.println("[Tool desc] "+entry.getValue().getDescription());
-                System.out.println("[Tool provider] "+entry.getValue().getProviderName());
-                System.out.println("[Tool params] ");
-                for(String param : entry.getValue().getParams().keySet()) {
-                    System.out.println(param);
-                }
-                System.out.println();
+            for (Tool tool : tools.values()) {
+                toolRegistry.register(tool);
+                System.out.println("Registered tool: " + tool.getName());
             }
-        } catch(Exception e) {
+
+            String apiKey = System.getenv("GEMINI_API_KEY");
+            if (apiKey == null && args.length > 0) {
+                apiKey = args[0];
+            }
+
+            if (apiKey == null) {
+                System.out.println("Please provide GEMINI_API_KEY environment variable or pass it as an argument.");
+                return;
+            }
+
+            LlmService llmService = new LlmService(toolRegistry, methodRunner, objectMapper, apiKey);
+
+            String userMessage = "Hello";
+            System.out.println("User: " + userMessage);
+            String response = llmService.chat(userMessage);
+            System.out.println("Agent: " + response);
+
+        } catch (Exception e) {
             e.printStackTrace();
             System.out.println(e.getMessage());
         }
