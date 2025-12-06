@@ -46,10 +46,10 @@ public class App {
             }
 
             GeminiClient geminiClient = new GeminiClient(apiKey);
-            MyCustomAgent myCustomAgent = new MyCustomAgent(geminiClient, toolRegistry, methodRunner, objectMapper);
-            myCustomAgent.setId("jarvis");
 
-            String userMessage = "Hello, my name is Jean! What's your name?";
+            MyCustomAgent myCustomAgent = new MyCustomAgent(geminiClient, toolRegistry, methodRunner, objectMapper);
+
+            String userMessage = "What is the weather like today?";
             System.out.println("User: " + userMessage);
             String response = myCustomAgent.chat(userMessage);
             System.out.println("Agent: " + response);

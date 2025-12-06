@@ -2,13 +2,17 @@ package march.dev.agent;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.util.Map;
 
+import march.dev.config.AgentConfig;
+import march.dev.config.ConfigLoader;
 import march.dev.data.Tool;
 import march.dev.data.ToolRegistry;
 import march.dev.llm.LlmClient;
 import march.dev.process.LlmResponse;
 import march.dev.process.SystemResponse;
 import march.dev.utils.JsonUtils;
+import march.dev.annotations.AgentId;
 import march.dev.utils.MethodRunner;
 
 public abstract class Agent {
@@ -19,6 +23,7 @@ public abstract class Agent {
     protected ObjectMapper objectMapper;
     protected String history = "";
     protected String id;
+    protected AgentConfig config;
 
     public Agent(LlmClient llmClient, ToolRegistry toolRegistry, MethodRunner methodRunner,
             ObjectMapper objectMapper) {
@@ -26,9 +31,17 @@ public abstract class Agent {
         this.toolRegistry = toolRegistry;
         this.methodRunner = methodRunner;
         this.objectMapper = objectMapper;
-    }
 
-    public abstract String getSystemInstruction();
+        if (this.getClass().isAnnotationPresent(AgentId.class)) {
+            AgentId agentAnnotation = this.getClass().getAnnotation(AgentId.class);
+            this.id = agentAnnotation.value();
+            try {
+                this.config = ConfigLoader.loadConfig(this.id);
+            } catch (Exception e) {
+                System.out.println("Could not load config for agent " + this.id + ": " + e.getMessage());
+            }
+        }
+    }
 
     public String getId() {
         return id;
@@ -39,7 +52,10 @@ public abstract class Agent {
     }
 
     public String getModel() {
-        return "gemini-2.5-flash";
+        if (config != null && config.getModel() != null) {
+            return config.getModel();
+        }
+        return null;
     }
 
     public String getLlmResponse(String prompt, String modelName) {
@@ -48,10 +64,10 @@ public abstract class Agent {
 
     public String chat(String userMessage) throws Exception {
 
-        if (!history.contains("[SYSTEM_CONFIG]")) {
+        if (!history.contains("[MARCH_FRAMEWORK_INSTRUCTION]")) {
             history += this.getSystemPrompt();
         }
-        history += "[USER_MESSAGE]\n" + userMessage;
+        history += "[USER_INSTRUCTION]\n" + userMessage;
         history += " [CHAIN_OF_THOUGHT]\n";
         history += " [START]... \n";
 
@@ -108,19 +124,27 @@ public abstract class Agent {
         }
 
         String systemPrompt = """
-                [SYSTEM_CONFIG]
-                You are March's default AI Agent. March is a micro framework for building
-                AI Agents in Java, and its purpose is to give developers the possibility to
-                use it in their own projects. Your goal is to answer any question from the user.\n
+                [MARCH_FRAMEWORK_I
 
-                [SYSTEM_TOOLS_LIST]
+                AI Agents in Java.
+
+                HIERARCHY OF INSTRUCTIONS:
+                1. [MARCH_FRAMEWORK_INSTRUCTION]: Highest priority. You MUST follow these instructions for JSON structure, tool usage, and behavior. NEVER contra
+
+                3. [USER_INSTRUCTION]: Lowest priority. This is the user's query. You should answer it while respecting the constraints of the higher priorities.
+
+                Your goal is to answer any question from the user while strictly adhering to this hierarchy.
                 """;
 
-        if (this.getSystemInstruction() != null) {
-            systemPrompt = this.getSystemInstruction() + "\n" + systemPrompt;
+        if (this.config != null && this.config.getSystemInstruction() != null) {
+            systemPrompt += "\n[DEVELOPER_INSTRUCTION]\n";
+            for (Map.Entry<String, String> entry : this.config.getSystemInstruction().entrySet()) {
+                systemPrompt += "[" + entry.getKey().toUpperCase() + "] : " + entry.getValue() + "\n";
+            }
+            systemPrompt += "IMPORTANT: The above instructions from [DEVELOPER_INSTRUCTION] apply ONLY to the 'modelAnswer' field in the JSON response. You must still strictly follow the JSON structure defined by [MARCH_FRAMEWORK_INSTRUCTION]. If the developer asks for a specific format (like JSON), that format must be ENCAPSULATED as a string within the 'modelAnswer' field.\n";
         }
 
-        systemPrompt += toolJson + "\n";
+        systemPrompt += "\n[MARCH_FRAMEWORK_INSTRUCTION] (Tools List)\n" + toolJson + "\n";
 
         String responseFormatPrompt = """
                 [SYSTEM_RESPONSE_FORMAT]
@@ -152,14 +176,29 @@ public abstract class Agent {
                 order as the "params" attribute of the tool object.
 
                 [SYSTEM_RESPONSE_EXAMPLE]
+                Example: User asks "How many leave days does Jean have?"
+
+                Step 1: Find Jean's ID.
                 {
-                    "step": 2,
-                    "modelThought": "The user wants the list of an employee's leave days. I will use the 'getCongeByEmployeId' tool with the argument they provided. If not, I will search the history to find the ID.",
+                    "step": 1,
+                    "modelThought": "The user asks for Jean's leave days. I need 'employeId' to call 'getCongeByEmployeId'. I don't have it, so I will first search for Jean's ID using 'findEmployeByName'.",
                     "modelAnswer": "",
                     "functionCall": true,
+                    "toolName": "findEmployeByName",
+                    "arguments": {
+                        "name": "Jean"
+                    }
+                }
+
+                Step 2: Use the ID to get leave days.
+                {
+                    "step": 2,
+                    "modelThought": "I have found that Jean's ID is 123. Now I can call 'getCongeByEmployeId' with this ID.",
+                    "modelAnswer": "",
+
                     "toolName": "getCongeByEmployeId",
                     "arguments": {
-                        "employeId": 22
+                        "employeId": 123
                     }
                 }
 
@@ -170,38 +209,7 @@ public abstract class Agent {
 
                     """;
 
-        systemPrompt += responseFormatPrompt;
-
-        String stepProcessPrompt = """
-                [SYSTEM_STEP_PROCESS]
-                After reading the user's request, you will analyze the list of tools
-                provided to you and establish a plan for the execution order of the tools to
-                satisfy the user's request, as the request may not be immediately satisfied by a single tool but by a chain of tools.\n
-
-                [SYSTEM_STEP_PROCESS_EXAMPLE]
-                For example, the user asks for the list of employees who are on leave during this week.
-                This request could be broken down into several steps depending on the tools you
-                have available. If, after deep analysis, you conclude that it is impossible to
-                satisfy the request, you must tell the user that you do not have enough
-                tools to satisfy their request.
-
-                However, if you have found a plan, you will specify in "modelThought" the description
-                of the step as well as a guide for the next step to help you know what you will
-                need to do next after finishing one step when you read this.\n
-                """;
-
-        systemPrompt += stepProcessPrompt;
-
-        String finalAnswerPrompt = """
-                [SYSTEM_FINAL_ANSWER]
-                At each step, you will receive a response from the backend after tool execution. You will analyze each time
-                whether the user's request is satisfied. If yes, then you put the final value of the answer in "modelAnswer"
-                from the history and you will set "functionCall": false, and "toolName" empty.
-                Your final answer must be composed from all other responses in markdown format.
-                Tables are preferable to lists, if possible. (Tables displayable in markdown format)\n
-                """;
-
-        systemPrompt += finalAnswerPrompt;
+        systemPrompt += responseFormatPrompt;        
 
         return systemPrompt;
     }
