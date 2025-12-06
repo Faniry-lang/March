@@ -9,7 +9,6 @@ import java.util.Map;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import march.dev.chat.LlmService;
 import march.dev.data.Tool;
 import march.dev.data.ToolRegistry;
 import march.dev.utils.MethodRunner;
@@ -45,9 +44,8 @@ public class App {
                 return;
             }
 
-            LlmService llmService = new LlmService(apiKey);
-            MyCustomAgent myCustomAgent = new MyCustomAgent(llmService, toolRegistry, methodRunner, objectMapper);
-            myCustomAgent.setId("other");
+            MyCustomAgent myCustomAgent = new MyCustomAgent(apiKey, toolRegistry, methodRunner, objectMapper);
+            myCustomAgent.setId("jarvis");
 
             String userMessage = "Hello, my name is Jean! What's your name?";
             System.out.println("User: " + userMessage);

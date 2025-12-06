@@ -3,7 +3,9 @@ package march.dev.agent;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import march.dev.chat.LlmService;
+import com.google.genai.Client;
+import com.google.genai.types.GenerateContentResponse;
+
 import march.dev.data.Tool;
 import march.dev.data.ToolRegistry;
 import march.dev.process.LlmResponse;
@@ -13,16 +15,16 @@ import march.dev.utils.MethodRunner;
 
 public abstract class Agent {
 
-    protected LlmService llmService;
+    protected Client geminiClient;
     protected ToolRegistry toolRegistry;
     protected MethodRunner methodRunner;
     protected ObjectMapper objectMapper;
     protected String history = "";
     protected String id;
 
-    public Agent(LlmService llmService, ToolRegistry toolRegistry, MethodRunner methodRunner,
+    public Agent(String apiKey, ToolRegistry toolRegistry, MethodRunner methodRunner,
             ObjectMapper objectMapper) {
-        this.llmService = llmService;
+        this.geminiClient = Client.builder().apiKey(apiKey).build();
         this.toolRegistry = toolRegistry;
         this.methodRunner = methodRunner;
         this.objectMapper = objectMapper;
@@ -42,6 +44,19 @@ public abstract class Agent {
         return "gemini-2.5-flash";
     }
 
+    public String getLlmResponse(String prompt, String modelName) {
+        String responseText = "";
+        try {
+            GenerateContentResponse response = geminiClient.models.generateContent(modelName, prompt, null);
+            responseText = response.text();
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.out.println(e.getMessage());
+            responseText = "Une erreur s'est produite " + e.getMessage();
+        }
+        return responseText;
+    }
+
     public String chat(String userMessage) throws Exception {
 
         if (!history.contains("[SYSTEM_CONFIG]")) {
@@ -56,7 +71,7 @@ public abstract class Agent {
         while (true) {
             LlmResponse response = null;
             try {
-                String llmResponseString = llmService.generateContent(history, getModel());
+                String llmResponseString = getLlmResponse(history, getModel());
                 String cleanedLlmResponseString = JsonUtils.cleanLlmResponse(llmResponseString);
                 history += " [MODEL_RESPONSE]\n" + cleanedLlmResponseString + "\n";
                 response = objectMapper.readValue(cleanedLlmResponseString, LlmResponse.class);
