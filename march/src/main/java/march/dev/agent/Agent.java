@@ -3,11 +3,9 @@ package march.dev.agent;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import com.google.genai.Client;
-import com.google.genai.types.GenerateContentResponse;
-
 import march.dev.data.Tool;
 import march.dev.data.ToolRegistry;
+import march.dev.llm.LlmClient;
 import march.dev.process.LlmResponse;
 import march.dev.process.SystemResponse;
 import march.dev.utils.JsonUtils;
@@ -15,16 +13,16 @@ import march.dev.utils.MethodRunner;
 
 public abstract class Agent {
 
-    protected Client geminiClient;
+    protected LlmClient llmClient;
     protected ToolRegistry toolRegistry;
     protected MethodRunner methodRunner;
     protected ObjectMapper objectMapper;
     protected String history = "";
     protected String id;
 
-    public Agent(String apiKey, ToolRegistry toolRegistry, MethodRunner methodRunner,
+    public Agent(LlmClient llmClient, ToolRegistry toolRegistry, MethodRunner methodRunner,
             ObjectMapper objectMapper) {
-        this.geminiClient = Client.builder().apiKey(apiKey).build();
+        this.llmClient = llmClient;
         this.toolRegistry = toolRegistry;
         this.methodRunner = methodRunner;
         this.objectMapper = objectMapper;
@@ -45,16 +43,7 @@ public abstract class Agent {
     }
 
     public String getLlmResponse(String prompt, String modelName) {
-        String responseText = "";
-        try {
-            GenerateContentResponse response = geminiClient.models.generateContent(modelName, prompt, null);
-            responseText = response.text();
-        } catch (Exception e) {
-            e.printStackTrace();
-            System.out.println(e.getMessage());
-            responseText = "Une erreur s'est produite " + e.getMessage();
-        }
-        return responseText;
+        return llmClient.generate(prompt, modelName);
     }
 
     public String chat(String userMessage) throws Exception {

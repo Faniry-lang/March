@@ -4,13 +4,14 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import march.dev.agent.Agent;
 import march.dev.data.ToolRegistry;
+import march.dev.llm.LlmClient;
 import march.dev.utils.MethodRunner;
 
 public class MyCustomAgent extends Agent {
 
-    public MyCustomAgent(String apiKey, ToolRegistry toolRegistry, MethodRunner methodRunner,
+    public MyCustomAgent(LlmClient llmClient, ToolRegistry toolRegistry, MethodRunner methodRunner,
             ObjectMapper objectMapper) {
-        super(apiKey, toolRegistry, methodRunner, objectMapper);
+        super(llmClient, toolRegistry, methodRunner, objectMapper);
     }
 
     @Override

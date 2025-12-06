@@ -11,6 +11,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import march.dev.data.Tool;
 import march.dev.data.ToolRegistry;
+import march.dev.llm.GeminiClient;
 import march.dev.utils.MethodRunner;
 import march.dev.utils.ProviderScan;
 
@@ -44,7 +45,8 @@ public class App {
                 return;
             }
 
-            MyCustomAgent myCustomAgent = new MyCustomAgent(apiKey, toolRegistry, methodRunner, objectMapper);
+            GeminiClient geminiClient = new GeminiClient(apiKey);
+            MyCustomAgent myCustomAgent = new MyCustomAgent(geminiClient, toolRegistry, methodRunner, objectMapper);
             myCustomAgent.setId("jarvis");
 
             String userMessage = "Hello, my name is Jean! What's your name?";
