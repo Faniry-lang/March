@@ -6,8 +6,10 @@ import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
 import java.lang.reflect.WildcardType;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -18,53 +20,76 @@ public class Tool {
     Method method;
     Map<String, Type> params;
     Type returnType;
-    
+    List<String> access = new ArrayList<>();
+
     public Tool() {
     }
+
     public Tool(String name, String description, String providerName, Method method, Map<String, Type> params,
-            Type returnType) {
+            Type returnType, List<String> access) {
         this.name = name;
         this.description = description;
         this.providerName = providerName;
         this.method = method;
         this.params = params;
         this.returnType = returnType;
+        this.access = access;
     }
+
     public Type getReturnType() {
         return returnType;
     }
+
     public void setReturnType(Type returnType) {
         this.returnType = returnType;
     }
+
     public String getName() {
         return name;
     }
+
     public void setName(String name) {
         this.name = name;
     }
+
     public String getDescription() {
         return description;
     }
+
     public void setDescription(String description) {
         this.description = description;
     }
+
     public String getProviderName() {
         return providerName;
     }
+
     public void setProviderName(String providerName) {
         this.providerName = providerName;
     }
+
     public Method getMethod() {
         return method;
     }
+
     public void setMethod(Method method) {
         this.method = method;
     }
+
     public Map<String, Type> getParams() {
         return params;
     }
+
     public void setParams(Map<String, Type> params) {
         this.params = params;
+    }
+
+    public List<String> getAccess() {
+        return access;
+    }
+
+    public void setAccess(List<String> access) {
+        this.access = access;
     }
 
     public ToolDto toDto() {
@@ -77,13 +102,12 @@ public class Tool {
         }
 
         return new ToolDto(
-            name,
-            description,
-            providerName,
-            methodName,
-            paramMap,
-            returnTypeName
-        );
+                name,
+                description,
+                providerName,
+                methodName,
+                paramMap,
+                returnTypeName);
     }
 
     private static String typeToString(Type type) {
@@ -124,4 +148,3 @@ public class Tool {
     }
 
 }
-

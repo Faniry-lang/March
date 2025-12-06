@@ -18,6 +18,7 @@ public abstract class Agent {
     protected MethodRunner methodRunner;
     protected ObjectMapper objectMapper;
     protected String history = "";
+    protected String id;
 
     public Agent(LlmService llmService, ToolRegistry toolRegistry, MethodRunner methodRunner,
             ObjectMapper objectMapper) {
@@ -28,6 +29,14 @@ public abstract class Agent {
     }
 
     public abstract String getSystemInstruction();
+
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
+    }
 
     public String getModel() {
         return "gemini-2.5-flash";
@@ -88,7 +97,7 @@ public abstract class Agent {
         String toolJson = "";
 
         try {
-            toolJson = objectMapper.writeValueAsString(toolRegistry.getToolsDto());
+            toolJson = objectMapper.writeValueAsString(toolRegistry.getToolsForAgent(this.id));
         } catch (JsonProcessingException e) {
             e.printStackTrace();
             throw new Exception("Error during tool serialization: " + e.getMessage());

@@ -5,7 +5,9 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import java.lang.reflect.Type;
 import java.net.URL;
+import java.net.URL;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -18,7 +20,7 @@ import march.dev.data.Tool;
 public class ProviderScan {
 
     public static Map<String, Tool> scanTools(String packageName) throws Exception {
-        
+
         Map<String, Tool> tools = new HashMap<>();
         ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
         String path = packageName.replace('.', '/');
@@ -35,12 +37,15 @@ public class ProviderScan {
                 Class<?> clazz = Class.forName(className);
 
                 if (clazz.isAnnotationPresent(LlmContextProvider.class)) {
+                    LlmContextProvider providerAnnotation = clazz.getAnnotation(LlmContextProvider.class);
                     String providerName = clazz.getName();
-                    for(Method method : clazz.getDeclaredMethods()) {
-                        if(method.isAnnotationPresent(LlmTool.class)) {
+                    List<String> providerAccess = Arrays.asList(providerAnnotation.access());
+
+                    for (Method method : clazz.getDeclaredMethods()) {
+                        if (method.isAnnotationPresent(LlmTool.class)) {
                             LlmTool toolAnnotation = method.getAnnotation(LlmTool.class);
                             String name = method.getName();
-                            if(toolAnnotation.name() != null && !toolAnnotation.name().isEmpty()) {
+                            if (toolAnnotation.name() != null && !toolAnnotation.name().isEmpty()) {
                                 name = toolAnnotation.name();
                             }
 
@@ -52,20 +57,21 @@ public class ProviderScan {
                             }
 
                             Type returnType = method.getGenericReturnType();
+                            List<String> toolAccess = new ArrayList<>(providerAccess);
+                            toolAccess.addAll(Arrays.asList(toolAnnotation.access()));
 
-                            Tool tool = new Tool(name, description, providerName, method, paramMap, returnType);  
-                            if(tools.containsKey(name)) {
-                                throw new Exception("Tool with name '"+name+"' already exists");
-                            }  
-                            tools.put(name, tool);                    
-                        }       
+                            Tool tool = new Tool(name, description, providerName, method, paramMap, returnType,
+                                    toolAccess);
+                            if (tools.containsKey(name)) {
+                                throw new Exception("Tool with name '" + name + "' already exists");
+                            }
+                            tools.put(name, tool);
+                        }
                     }
                 }
             }
         }
-        
+
         return tools;
     }
 }
-
-

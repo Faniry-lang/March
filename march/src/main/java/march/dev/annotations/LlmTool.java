@@ -9,5 +9,8 @@ import java.lang.annotation.Target;
 @Target(ElementType.METHOD)
 public @interface LlmTool {
     String name() default "";
+
     String description();
+
+    String[] access() default {};
 }
