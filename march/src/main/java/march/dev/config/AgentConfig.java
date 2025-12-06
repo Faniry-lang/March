@@ -5,13 +5,15 @@ import java.util.Map;
 public class AgentConfig {
     private String model;
     private Map<String, String> systemInstruction;
+    private int maxHistorySize = 10000;
 
     public AgentConfig() {
     }
 
-    public AgentConfig(String model, Map<String, String> systemInstruction) {
+    public AgentConfig(String model, Map<String, String> systemInstruction, int maxHistorySize) {
         this.model = model;
         this.systemInstruction = systemInstruction;
+        this.maxHistorySize = maxHistorySize;
     }
 
     public String getModel() {
@@ -28,5 +30,13 @@ public class AgentConfig {
 
     public void setSystemInstruction(Map<String, String> systemInstruction) {
         this.systemInstruction = systemInstruction;
+    }
+
+    public int getMaxHistorySize() {
+        return maxHistorySize;
+    }
+
+    public void setMaxHistorySize(int maxHistorySize) {
+        this.maxHistorySize = maxHistorySize;
     }
 }

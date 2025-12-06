@@ -14,6 +14,7 @@ import march.dev.process.SystemResponse;
 import march.dev.utils.JsonUtils;
 import march.dev.annotations.AgentId;
 import march.dev.utils.MethodRunner;
+import march.dev.history.HistoryService;
 
 public abstract class Agent {
 
@@ -24,6 +25,8 @@ public abstract class Agent {
     protected String history = "";
     protected String id;
     protected AgentConfig config;
+    protected HistoryService historyService;
+    protected String ephemeralContext = "";
 
     public Agent(LlmClient llmClient, ToolRegistry toolRegistry, MethodRunner methodRunner,
             ObjectMapper objectMapper) {
@@ -37,6 +40,7 @@ public abstract class Agent {
             this.id = agentAnnotation.value();
             try {
                 this.config = ConfigLoader.loadConfig(this.id);
+                this.historyService = new HistoryService(this.id, this.llmClient, this.objectMapper);
             } catch (Exception e) {
                 System.out.println("Could not load config for agent " + this.id + ": " + e.getMessage());
             }
@@ -74,9 +78,31 @@ public abstract class Agent {
         int errorCount = 0;
 
         while (true) {
+            if (history.length() > config.getMaxHistorySize()) {
+                int cutIndex = history.indexOf("[USER_INSTRUCTION]", history.length() / 2);
+                if (cutIndex != -1) {
+                    String toArchive = history.substring(0, cutIndex);
+                    String toKeep = history.substring(cutIndex);
+
+                    if (toArchive.contains("[MARCH_FRAMEWORK_INSTRUCTION]")) {
+                         int systemPromptEnd = history.indexOf("[USER_INSTRUCTION]");
+                         if (systemPromptEnd != -1 && cutIndex > systemPromptEnd) {
+                             toArchive = history.substring(systemPromptEnd, cutIndex);
+                             toKeep = history.substring(0, systemPromptEnd) + history.substring(cutIndex);
+                         }
+                    }
+                    
+                    historyService.archive(toArchive);
+                    history = toKeep;
+                }
+            }
+
             LlmResponse response = null;
             try {
-                String llmResponseString = getLlmResponse(history, getModel());
+                String prompt = history + ephemeralContext;
+                ephemeralContext = ""; 
+                
+                String llmResponseString = getLlmResponse(prompt, getModel());
                 String cleanedLlmResponseString = JsonUtils.cleanLlmResponse(llmResponseString);
                 history += " [MODEL_RESPONSE]\n" + cleanedLlmResponseString + "\n";
                 response = objectMapper.readValue(cleanedLlmResponseString, LlmResponse.class);
@@ -90,6 +116,14 @@ public abstract class Agent {
                     SystemResponse systemResponse = new SystemResponse(response.getStep(), response.getToolName(),
                             resultJson, args);
                     String systemResponseJson = objectMapper.writeValueAsString(systemResponse);
+                    
+                    if (resultJson.contains("[EPHEMERAL]")) {
+                        String content = resultJson.substring(resultJson.indexOf("[EPHEMERAL]") + 11, resultJson.indexOf("[/EPHEMERAL]"));
+                        ephemeralContext = "\n[EPHEMERAL_HISTORY_CONTEXT]\n" + content + "\n[END_EPHEMERAL_HISTORY_CONTEXT]\n";
+                        systemResponse = new SystemResponse(response.getStep(), response.getToolName(), "History loaded for this turn.", args);
+                        systemResponseJson = objectMapper.writeValueAsString(systemResponse);
+                    }
+                    
                     history += " [BACKEND_RESPONSE]\n" + systemResponseJson + "\n";
                     continue;
                 }
@@ -134,7 +168,12 @@ public abstract class Agent {
                 3. [USER_INSTRUCTION]: Lowest priority. This is the user's query. You should answer it while respecting the constraints of the higher priorities.
 
                 Your goal is to answer any question from the user while strictly adhering to this hierarchy.
+                
+                Your Agent ID is: %s. You can use this ID to access your history tools.
+                You have access to your past history. If you need to recall something, use 'getHistorySummaries' with your ID to find relevant chunks, then 'getHistoryById' to load them.
                 """;
+        
+        systemPrompt = String.format(systemPrompt, this.id);
 
         if (this.config != null && this.config.getSystemInstruction() != null) {
             systemPrompt += "\n[DEVELOPER_INSTRUCTION]\n";
@@ -164,8 +203,8 @@ public abstract class Agent {
                 Your response must start directly with the opening brace '{' and end with the closing brace '}'.
                 The "step" attribute is the step number of the request, from 1 to n.
                 All comments you make must be in "modelThought";
-                the answer for the user will be in "modelAnswer" (empty if it's not the final answer).
-                The "functionCall" attribute is a boolean (either true or false, it CANNOT BE EMPTY);
+                the answer for the user will 
+
                 if the user's request does not require a function call, this will always be false.
                 The "toolName" attribute is the name of the tool you have chosen to answer the user's request.
                 IMPORTANT: If no tool can satisfy the request, do not try to create answers
