@@ -29,9 +29,16 @@ public class ToolRegistry {
     }
 
     public Map<String, ToolDto> getToolsDto() {
+        return getToolsForAgent(null);
+    }
+
+    public Map<String, ToolDto> getToolsForAgent(String agentId) {
         Map<String, ToolDto> toolDtos = new LinkedHashMap<>();
         for (Map.Entry<String, Tool> entry : this.tools.entrySet()) {
-            toolDtos.put(entry.getKey(), entry.getValue().toDto());
+            Tool tool = entry.getValue();
+            if (tool.getAccess().isEmpty() || (agentId != null && tool.getAccess().contains(agentId))) {
+                toolDtos.put(entry.getKey(), tool.toDto());
+            }
         }
         return toolDtos;
     }

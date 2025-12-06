@@ -47,6 +47,7 @@ public class App {
 
             LlmService llmService = new LlmService(apiKey);
             MyCustomAgent myCustomAgent = new MyCustomAgent(llmService, toolRegistry, methodRunner, objectMapper);
+            myCustomAgent.setId("other");
 
             String userMessage = "Hello, my name is Jean! What's your name?";
             System.out.println("User: " + userMessage);
