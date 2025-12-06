@@ -1,5 +1,10 @@
 package march.sample;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -24,8 +29,14 @@ public class App {
                 System.out.println("Registered tool: " + tool.getName());
             }
 
-            String apiKey = System.getenv("GEMINI_API_KEY");
-            if (apiKey == null && args.length > 0) {
+            Map<String, String> env = loadEnv();
+            String apiKey = env.get("GEMINI_API_KEY");
+
+            if (apiKey == null || apiKey.isEmpty() || apiKey.equals("YOUR_API_KEY_HERE")) {
+                apiKey = System.getenv("GEMINI_API_KEY");
+            }
+
+            if ((apiKey == null || apiKey.isEmpty()) && args.length > 0) {
                 apiKey = args[0];
             }
 
@@ -34,16 +45,36 @@ public class App {
                 return;
             }
 
-            LlmService llmService = new LlmService(toolRegistry, methodRunner, objectMapper, apiKey);
+            LlmService llmService = new LlmService(apiKey);
+            MyCustomAgent myCustomAgent = new MyCustomAgent(llmService, toolRegistry, methodRunner, objectMapper);
 
-            String userMessage = "Hello";
+            String userMessage = "Hello, my name is Jean! What's your name?";
             System.out.println("User: " + userMessage);
-            String response = llmService.chat(userMessage);
+            String response = myCustomAgent.chat(userMessage);
             System.out.println("Agent: " + response);
 
         } catch (Exception e) {
             e.printStackTrace();
             System.out.println(e.getMessage());
         }
+    }
+
+    private static Map<String, String> loadEnv() {
+        Map<String, String> env = new HashMap<>();
+        try {
+            List<String> lines = Files.readAllLines(Paths.get(".env"));
+            for (String line : lines) {
+                if (line.trim().isEmpty() || line.startsWith("#")) {
+                    continue;
+                }
+                String[] parts = line.split("=", 2);
+                if (parts.length == 2) {
+                    env.put(parts[0].trim(), parts[1].trim());
+                }
+            }
+        } catch (IOException e) {
+            System.out.println("No .env file found or error reading it.");
+        }
+        return env;
     }
 }
