@@ -1,7 +1,6 @@
 package march.dev.process;
 
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -9,14 +8,49 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import march.dev.data.Tool;
 import march.dev.data.ToolRegistry;
+import march.dev.utils.TemplateUtils;
 
-public class LlmResponse {
+public class LlmResponse implements Response {
     int step;
     String modelThought;
     String modelAnswer;
     boolean functionCall;
     String toolName;
     Map<String, Object> arguments;
+
+    @Override
+    public String toXml() throws Exception {
+        String content = this.contentToXml();
+        String messageTemplate = TemplateUtils.getMessageTemplate();
+        TemplateUtils.replace(messageTemplate, "<content-placeholder/>", content);
+        TemplateUtils.replace(messageTemplate, "<role-placeholder/>", "agent");
+        return messageTemplate;
+    }
+
+    public String contentToXml() {
+        StringBuilder sb = new StringBuilder();
+        sb.append("<llm-response>");
+        sb.append("<step>").append(this.step).append("</step>");
+        sb.append("<modelThought>").append(this.modelThought).append("</modelThought>");
+        sb.append("<tool-details>");
+        sb.append("<functionCall>").append(this.functionCall).append("</functionCall>");
+        if (this.functionCall) {
+            sb.append("<toolName>").append(this.toolName).append("</toolName>");
+            sb.append("<arguments>");
+            if (this.arguments != null) {
+                for (Map.Entry<String, Object> entry : this.arguments.entrySet()) {
+                    sb.append("<").append(entry.getKey()).append(">");
+                    sb.append(entry.getValue());
+                    sb.append("</").append(entry.getKey()).append(">");
+                }
+            }
+            sb.append("</arguments>");
+        }
+        sb.append("</tool-details>");
+        sb.append("<modelAnswer>").append(this.modelAnswer).append("</modelAnswer>");
+        sb.append("</llm-response>");
+        return sb.toString();
+    }
 
     public LlmResponse() {
     }

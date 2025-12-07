@@ -7,7 +7,7 @@ import java.nio.charset.StandardCharsets;
 
 public class ResourceUtils {
     public static String readResourceFile(String filePath) throws IOException {
-        try (InputStream is = ResourceUtils.class.getClass().getClassLoader().getResourceAsStream(filePath)) {
+        try (InputStream is = ResourceUtils.class.getClassLoader().getResourceAsStream(filePath)) {
             if (is == null) {
                 throw new FileNotFoundException("Resource file not found: " + filePath);
             }

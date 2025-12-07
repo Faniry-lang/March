@@ -3,23 +3,19 @@ package march.dev.agent;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.Map;
+import java.util.UUID;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.HashMap;
-import java.io.IOException;
-import java.io.FileNotFoundException;
-import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
-
 import march.dev.config.AgentConfig;
 import march.dev.config.ConfigLoader;
-import march.dev.data.Tool;
 import march.dev.data.ToolRegistry;
 import march.dev.llm.LlmClient;
 import march.dev.process.LlmResponse;
-import march.dev.process.SystemResponse;
-import march.dev.utils.JsonUtils;
 import march.dev.annotations.AgentId;
+import march.dev.chat.ChatSession;
 import march.dev.utils.MethodRunner;
 import march.dev.utils.ResourceUtils;
 import march.dev.history.HistoryService;
@@ -37,6 +33,7 @@ public abstract class Agent {
     protected String ephemeralContext = "";
     protected List<String> activeSummaryIds = new ArrayList<>();
     protected Map<String, String> context = new HashMap<>();
+    protected ChatSession chatSession;
 
     public Agent(LlmClient llmClient, ToolRegistry toolRegistry, MethodRunner methodRunner,
             ObjectMapper objectMapper) {
@@ -89,63 +86,50 @@ public abstract class Agent {
         return history.length();
     }
 
+    public void openChatSession() throws Exception {
+        String sessionId = UUID.randomUUID().toString();
+        this.chatSession = new ChatSession(
+            sessionId, this, this.objectMapper, this.methodRunner, this.toolRegistry
+        );
+    }
+
+    public void startChainOfThought(String userRequest) throws Exception {
+        this.chatSession.initResponseChain();
+        this.chatSession.setUserRequest(userRequest);
+    }
+
     public String chat(String userMessage) throws Exception {
 
-        if (!history.contains("[MARCH_FRAMEWORK_INSTRUCTION]")) {
-            history += this.getSystemPrompt();
+        if(this.chatSession == null) {
+            this.openChatSession();
         }
-        history += "[USER_INSTRUCTION]\n" + userMessage;
-        history += " [CHAIN_OF_THOUGHT]\n";
-        history += " [START]... \n";
+
+        this.startChainOfThought(userMessage);
 
         int errorCount = 0;
 
         while (true) {
-            // if (config != null && history.length() > config.getMaxHistorySize()) {
-            //     handleHistoryOverflow();
-            // }
-
             LlmResponse response = null;
             try {
                 String prompt = history + ephemeralContext;
                 ephemeralContext = "";
-                String llmResponseString = getLlmResponse(prompt);
-                String cleanedLlmResponseString = JsonUtils.cleanLlmResponse(llmResponseString);
-                history += " [MODEL_RESPONSE]\n" + cleanedLlmResponseString + "\n";
-                response = objectMapper.readValue(cleanedLlmResponseString, LlmResponse.class);
+
+                response = this.chatSession.getLlmResponse(prompt);
 
                 if (response.isFunctionCall()) {
-                    Tool tool = toolRegistry.get(response.getToolName());
-                    Object[] args = response.getOrderedAndTypedArgs(toolRegistry, objectMapper);
-                    Object result = methodRunner.execute(tool, args);
-                    String resultJson = objectMapper.writeValueAsString(result);
-
-                    SystemResponse systemResponse = new SystemResponse(response.getStep(), response.getToolName(),
-                            resultJson, args);
-                    String systemResponseJson = objectMapper.writeValueAsString(systemResponse);
-
-                    if (resultJson.contains("[EPHEMERAL]")) {
-                        String content = resultJson.substring(resultJson.indexOf("[EPHEMERAL]") + 11,
-                                resultJson.indexOf("[/EPHEMERAL]"));
-                        ephemeralContext = "\n[EPHEMERAL_HISTORY_CONTEXT]\n" + content
-                                + "\n[END_EPHEMERAL_HISTORY_CONTEXT]\n";
-                        systemResponse = new SystemResponse(response.getStep(), response.getToolName(),
-                                "History loaded for this turn.", args);
-                        systemResponseJson = objectMapper.writeValueAsString(systemResponse);
-                    }
-
-                    history += " [BACKEND_RESPONSE]\n" + systemResponseJson + "\n";
+                    this.chatSession.executeOrder(response);
                     continue;
                 }
 
-                history += " ...[END]\n";
+                Files.writeString(Paths.get("src/main/resources/history.xml"), this.chatSession.getHistory());
                 return response.getModelAnswer();
 
             } catch (Exception e) {
                 e.printStackTrace();
                 System.out.println("Erreur: " + e.getMessage());
                 response = new LlmResponse(-1, "Une erreur s'est produite " + e.getMessage(), "", false, "", null);
-                history += " [BACKEND_RESPONSE]\n[ERROR]\n" + objectMapper.writeValueAsString(response) + "\n";
+                this.chatSession.writeResponseInHistory(response);
+
                 errorCount++;
 
                 if (errorCount > 3) {
@@ -197,90 +181,5 @@ public abstract class Agent {
         prompt = prompt.replace("[PLACEHOLDER: user-context]", userContext.toString());
 
         return prompt;
-    }
-
-    private void handleHistoryOverflow() {
-        int cutIndex = findCutPoint();
-        if (cutIndex == -1) {
-            return;
-        }
-
-        String chunkToArchive = extractChunk(cutIndex);
-        if (chunkToArchive.isEmpty()) {
-            return;
-        }
-
-        // Archive and get summary
-        String summaryId = historyService.archive(chunkToArchive);
-        String summary = historyService.getSummaryById(summaryId);
-
-        // Add to active summaries
-        activeSummaryIds.add(summaryId);
-
-        // Check if we need to drop oldest summary
-        if (activeSummaryIds.size() > config.getMaxActiveSummaries()) {
-            String droppedId = activeSummaryIds.remove(0);
-            removeArchivedSummary(droppedId);
-        }
-
-        // Create summary marker
-        String summaryMarker = "[ARCHIVED_SUMMARY id=\"" + summaryId + "\"]\n"
-                + summary + "\n[/ARCHIVED_SUMMARY]\n\n";
-
-        // Remove the archived chunk from history first
-        // Find where to insert summary (after system prompt and existing summaries)
-        int lastSummaryEnd = history.lastIndexOf("[/ARCHIVED_SUMMARY]");
-        int insertPoint;
-        if (lastSummaryEnd != -1) {
-            // There are existing summaries, insert after them
-            insertPoint = lastSummaryEnd + "[/ARCHIVED_SUMMARY]".length() + 1;
-        } else {
-            // No summaries yet, insert after system prompt (before first USER_INSTRUCTION)
-            insertPoint = history.indexOf("[USER_INSTRUCTION]");
-        }
-
-        String beforeChunk = history.substring(0, insertPoint);
-        String afterChunk = history.substring(cutIndex);
-
-        // Reconstruct: system prompt + summaries + new summary + remaining history
-        history = beforeChunk + summaryMarker + afterChunk;
-    }
-
-    private int findCutPoint() {
-        int searchStart = history.indexOf("[USER_INSTRUCTION]");
-        if (searchStart == -1) {
-            return -1;
-        }
-
-        int cutIndex = history.indexOf("[USER_INSTRUCTION]", searchStart + 1);
-        return cutIndex;
-    }
-
-    private String extractChunk(int cutIndex) {
-        // Find the first [USER_INSTRUCTION] AFTER all archived summaries
-        int lastSummaryEnd = history.lastIndexOf("[/ARCHIVED_SUMMARY]");
-        int searchStart = (lastSummaryEnd != -1) ? lastSummaryEnd : 0;
-
-        int firstUserInstruction = history.indexOf("[USER_INSTRUCTION]", searchStart);
-        if (firstUserInstruction == -1 || firstUserInstruction >= cutIndex) {
-            return "";
-        }
-
-        // Extract only from first user instruction to cut point (excludes system prompt
-        // and summaries)
-        return history.substring(firstUserInstruction, cutIndex);
-    }
-
-    private void removeArchivedSummary(String id) {
-        String startMarker = "[ARCHIVED_SUMMARY id=\"" + id + "\"]";
-        String endMarker = "[/ARCHIVED_SUMMARY]";
-
-        int startIndex = history.indexOf(startMarker);
-        if (startIndex != -1) {
-            int endIndex = history.indexOf(endMarker, startIndex);
-            if (endIndex != -1) {
-                history = history.substring(0, startIndex) + history.substring(endIndex + endMarker.length() + 1);
-            }
-        }
     }
 }
