@@ -120,6 +120,7 @@ public abstract class Agent {
                 }
 
                 Files.writeString(Paths.get("src/main/resources/history.xml"), this.chatSession.getHistory());
+                this.chatSession.endUserRequest();
                 return response.getModelAnswer();
 
             } catch (Exception e) {

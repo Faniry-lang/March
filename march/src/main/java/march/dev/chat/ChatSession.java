@@ -1,6 +1,7 @@
 package march.dev.chat;
 
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -42,7 +43,9 @@ public class ChatSession {
         StringBuilder sb = new StringBuilder();
         this.history = this.agent.getSystemPrompt();
         sb.append("<chat-session>");
-        sb.append("<message-placeholder/>");
+        sb.append("<history>");
+            sb.append("<history-placeholder/>");
+        sb.append("</history>");
         sb.append("<current-request-process>");
             sb.append("<user-request>");
                 sb.append("<user-request-placeholder/>");
@@ -57,6 +60,35 @@ public class ChatSession {
 
     public void setUserRequest(String userRequest) {
         this.history = TemplateUtils.replace(this.history, "<user-request-placeholder/>", userRequest);
+    }
+
+    public void endUserRequest() {
+        String currentUserRequestContent = TemplateUtils.getTagsContent(this.history, "user-request", false);
+        if (currentUserRequestContent == null) {
+            currentUserRequestContent = "";
+        }
+        
+        String currentChainOfThoughtContent = TemplateUtils.getTagsContent(this.history, "chain-of-thought", false);
+        if (currentChainOfThoughtContent == null) {
+            currentChainOfThoughtContent = "";
+        }
+        
+        String wholeCurrentRequestProcessContent = TemplateUtils.getTagsContent(this.history, "current-request-process", false);
+
+        String processRequestToAddToHistory;
+        if (wholeCurrentRequestProcessContent != null) {
+            processRequestToAddToHistory = "<history>"+wholeCurrentRequestProcessContent+"</history><history-placeholder/>";
+        } else {
+            processRequestToAddToHistory = "<history-placeholder/>";
+        }
+
+        LinkedHashMap<String, String> replacement = new LinkedHashMap<>();
+        
+        replacement.put(currentUserRequestContent, "<user-request-placeholder/>");
+        replacement.put(currentChainOfThoughtContent, "<chain-placeholder/>");
+        replacement.put("<history-placeholder/>", processRequestToAddToHistory);
+
+        this.history = TemplateUtils.multiReplace(this.history, replacement);
     }
 
     public void initResponseChain() {

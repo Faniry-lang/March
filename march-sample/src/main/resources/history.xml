@@ -98,4 +98,4 @@
             </example>
         </response-format>
     </march-framework-instruction>
-</system-prompt><chat-session><message-placeholder/><current-request-process><user-request><user-request-placeholder/></user-request><chain-of-thought><chain-placeholder/></chain-of-thought></current-request-process></chat-session>
+</system-prompt><chat-session><history><history-placeholder/></history><current-request-process><user-request>hi</user-request><chain-of-thought><message><role>agent</role><content><llm-response><step>1</step><modelThought>The user greeted me with 'hi'. I need to respond politely. Since the user's name is not provided, I'll use a general greeting.</modelThought><tool-details><functionCall>false</functionCall></tool-details><modelAnswer>Hello! How can I assist you today?</modelAnswer></llm-response></content></message><chain-placeholder/></chain-of-thought></current-request-process></chat-session>
