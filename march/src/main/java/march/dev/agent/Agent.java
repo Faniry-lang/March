@@ -21,6 +21,7 @@ import march.dev.process.SystemResponse;
 import march.dev.utils.JsonUtils;
 import march.dev.annotations.AgentId;
 import march.dev.utils.MethodRunner;
+import march.dev.utils.ResourceUtils;
 import march.dev.history.HistoryService;
 
 public abstract class Agent {
@@ -36,15 +37,6 @@ public abstract class Agent {
     protected String ephemeralContext = "";
     protected List<String> activeSummaryIds = new ArrayList<>();
     protected Map<String, String> context = new HashMap<>();
-
-    private String readResourceFile(String filePath) throws IOException {
-        try (InputStream is = getClass().getClassLoader().getResourceAsStream(filePath)) {
-            if (is == null) {
-                throw new FileNotFoundException("Resource file not found: " + filePath);
-            }
-            return new String(is.readAllBytes(), StandardCharsets.UTF_8);
-        }
-    }
 
     public Agent(LlmClient llmClient, ToolRegistry toolRegistry, MethodRunner methodRunner,
             ObjectMapper objectMapper) {
@@ -174,7 +166,7 @@ public abstract class Agent {
             throw new Exception("Error during tool serialization: " + e.getMessage());
         }
 
-        String systemPromptTemplate = readResourceFile("march-agent-system-prompt.xml");
+        String systemPromptTemplate = ResourceUtils.readResourceFile("march-agent-system-prompt.xml");
 
         String prompt = systemPromptTemplate.replace("[PLACEHOLDER: toolJson goes here, detailing tool names, functions, and arguments.]", toolJson);
 
