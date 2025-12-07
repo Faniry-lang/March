@@ -6,10 +6,6 @@ import java.util.Map;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.HashMap;
-import java.io.IOException;
-import java.io.FileNotFoundException;
-import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
 
 import march.dev.config.AgentConfig;
 import march.dev.config.ConfigLoader;
@@ -36,15 +32,6 @@ public abstract class Agent {
     protected String ephemeralContext = "";
     protected List<String> activeSummaryIds = new ArrayList<>();
     protected Map<String, String> context = new HashMap<>();
-
-    private String readResourceFile(String filePath) throws IOException {
-        try (InputStream is = getClass().getClassLoader().getResourceAsStream(filePath)) {
-            if (is == null) {
-                throw new FileNotFoundException("Resource file not found: " + filePath);
-            }
-            return new String(is.readAllBytes(), StandardCharsets.UTF_8);
-        }
-    }
 
     public Agent(LlmClient llmClient, ToolRegistry toolRegistry, MethodRunner methodRunner,
             ObjectMapper objectMapper) {
@@ -109,9 +96,9 @@ public abstract class Agent {
         int errorCount = 0;
 
         while (true) {
-            // if (config != null && history.length() > config.getMaxHistorySize()) {
-            //     handleHistoryOverflow();
-            // }
+            if (config != null && history.length() > config.getMaxHistorySize()) {
+                handleHistoryOverflow();
+            }
 
             LlmResponse response = null;
             try {
@@ -166,46 +153,64 @@ public abstract class Agent {
     }
 
     public String getSystemPrompt() throws Exception {
-        String toolJson = "";
-        try {
-            toolJson = objectMapper.writeValueAsString(toolRegistry.getToolsForAgent(this.id));
-        } catch (JsonProcessingException e) {
-            e.printStackTrace();
-            throw new Exception("Error during tool serialization: " + e.getMessage());
-        }
-
-        String systemPromptTemplate = readResourceFile("march-agent-system-prompt.xml");
-
-        String prompt = systemPromptTemplate.replace("[PLACEHOLDER: toolJson goes here, detailing tool names, functions, and arguments.]", toolJson);
-
-        StringBuilder additionalInstructions = new StringBuilder();
-        additionalInstructions.append("<agent-info>");
-        additionalInstructions.append("    <agent-id>").append(this.id).append("</agent-id>");
-        additionalInstructions.append("    <archived-summaries-instruction>Use [ARCHIVED_SUMMARY id=\"...\"] to refer to past summaries. Load details via 'getHistoryById'.</archived-summaries-instruction>");
-        additionalInstructions.append("</agent-info>");
-
-        StringBuilder developerInstruction = new StringBuilder();
-        if (this.config != null && this.config.getSystemInstruction() != null) {
-            developerInstruction.append("<developer-instruction>");
-            this.config.getSystemInstruction().forEach((k, v) -> developerInstruction.append("    <").append(k.toLowerCase()).append(">").append(v).append("</").append(k.toLowerCase()).append(">"));
-            developerInstruction.append("    <important>These instructions apply only to 'modelAnswer'. JSON structure from [MARCH_FRAMEWORK_INSTRUCTION] must always be followed.</important>");
-            developerInstruction.append("</developer-instruction>");
-        }
-
-        StringBuilder userContext = new StringBuilder();
-        if (!context.isEmpty()) {
-            userContext.append("<user-context>");
-            context.forEach((k, v) -> userContext.append("    <").append(k.toLowerCase()).append(">").append(v).append("</").append(k.toLowerCase()).append(">"));
-            userContext.append("    <important>The above context is provided by the developer. Use it to answer user questions accurately.</important>");
-            userContext.append("</user-context>");
-        }
-        
-        prompt = prompt.replace("[PLACEHOLDER: agent-info]", additionalInstructions.toString());
-        prompt = prompt.replace("[PLACEHOLDER: developer-instruction]", developerInstruction.toString());
-        prompt = prompt.replace("[PLACEHOLDER: user-context]", userContext.toString());
-
-        return prompt;
+    String toolJson = "";
+    try {
+        toolJson = objectMapper.writeValueAsString(toolRegistry.getToolsForAgent(this.id));
+    } catch (JsonProcessingException e) {
+        e.printStackTrace();
+        throw new Exception("Error during tool serialization: " + e.getMessage());
     }
+
+    StringBuilder sb = new StringBuilder();
+
+    // Base March framework instruction
+    sb.append("[MARCH_FRAMEWORK_INSTRUCTION]\n\n");
+    sb.append("AI Agents in Java.\n\n");
+    sb.append("HIERARCHY OF INSTRUCTIONS:\n");
+    sb.append("1. [MARCH_FRAMEWORK_INSTRUCTION]: Highest priority. Follow JSON structure, tool usage, and behavior strictly.\n");
+    sb.append("2. [DEVELOPER_INSTRUCTION]: Apply instructions only to 'modelAnswer'. Format requested by developer must be encapsulated in 'modelAnswer'.\n");
+    sb.append("3. [USER_INSTRUCTION]: Lowest priority. Answer user queries while respecting higher-priority constraints.\n\n");
+
+    sb.append("Agent ID: ").append(this.id).append(". Use it to access history tools.\n\n");
+    sb.append("ARCHIVED SUMMARIES: Use [ARCHIVED_SUMMARY id=\"...\"] to refer to past summaries. Load details via 'getHistoryById'.\n\n");
+
+    // Developer instructions
+    if (this.config != null && this.config.getSystemInstruction() != null) {
+        sb.append("[DEVELOPER_INSTRUCTION]\n");
+        this.config.getSystemInstruction().forEach((k, v) -> sb.append("[").append(k.toUpperCase()).append("] : ").append(v).append("\n"));
+        sb.append("IMPORTANT: These instructions apply only to 'modelAnswer'. JSON structure from [MARCH_FRAMEWORK_INSTRUCTION] must always be followed.\n\n");
+    }
+
+    // User context
+    if (!context.isEmpty()) {
+        sb.append("[USER_CONTEXT]\n");
+        context.forEach((k, v) -> sb.append("[").append(k.toUpperCase()).append("]\n").append(v).append("\n"));
+        sb.append("IMPORTANT: The above context is provided by the developer. Use it to answer user questions accurately.\n\n");
+    }
+
+    // Tools list
+    sb.append("[MARCH_FRAMEWORK_INSTRUCTION] (Tools List)\n").append(toolJson).append("\n");
+
+    // System response structure
+    sb.append("""
+        [SYSTEM_RESPONSE_FORMAT]
+        Respond only with a JSON object:
+        {
+            "step": ,
+            "modelThought": ,
+            "modelAnswer": ,
+            "functionCall": ,
+            "toolName": ,
+            "arguments": {}
+        }
+        No markdown, comments, or extra text. Begin with '{' and end with '}'.
+        "toolName" must be from the tools list. Arguments must follow tool params order.
+        """);
+
+    return sb.toString();
+}
+
+
 
     private void handleHistoryOverflow() {
         int cutIndex = findCutPoint();
