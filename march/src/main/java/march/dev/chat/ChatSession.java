@@ -56,7 +56,7 @@ public class ChatSession {
     }
 
     public void setUserRequest(String userRequest) {
-        TemplateUtils.replace(this.history, "<user-request-placeholder/>", userRequest);
+        this.history = TemplateUtils.replace(this.history, "<user-request-placeholder/>", userRequest);
     }
 
     public void initResponseChain() {
@@ -66,7 +66,7 @@ public class ChatSession {
     public void writeResponseInHistory(Response response) throws Exception {
         String responseTemplate = response.toXml();
         responseTemplate += "<chain-placeholder/>";
-        TemplateUtils.replace(this.history, "<chain-placeholder/>", responseTemplate);
+        this.history = TemplateUtils.replace(this.history, "<chain-placeholder/>", responseTemplate);
     }
 
     public LlmResponse getLlmResponse(String prompt) throws Exception {

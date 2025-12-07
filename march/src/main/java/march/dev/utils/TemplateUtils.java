@@ -2,8 +2,8 @@ package march.dev.utils;
 
 public class TemplateUtils {
 
-    public static void replace(String template, String placeholder, String content) {
-        template.replace(placeholder, content);
+    public static String replace(String template, String placeholder, String content) {
+        return template.replace(placeholder, content);
     }
 
     public static String getMessageTemplate() {

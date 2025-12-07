@@ -14,8 +14,8 @@ public class SystemResponse implements Response {
     public String toXml() throws Exception {
         String content = this.contentToXml();
         String messageTemplate = TemplateUtils.getMessageTemplate();
-        TemplateUtils.replace(messageTemplate, "<content-placeholder/>", content);
-        TemplateUtils.replace(messageTemplate, "<role-placeholder/>", "system");
+        messageTemplate = TemplateUtils.replace(messageTemplate, "<content-placeholder/>", content);
+        messageTemplate = TemplateUtils.replace(messageTemplate, "<role-placeholder/>", "system");
         return messageTemplate;
     }
 

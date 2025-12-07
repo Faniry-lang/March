@@ -22,8 +22,8 @@ public class LlmResponse implements Response {
     public String toXml() throws Exception {
         String content = this.contentToXml();
         String messageTemplate = TemplateUtils.getMessageTemplate();
-        TemplateUtils.replace(messageTemplate, "<content-placeholder/>", content);
-        TemplateUtils.replace(messageTemplate, "<role-placeholder/>", "agent");
+        messageTemplate = TemplateUtils.replace(messageTemplate, "<content-placeholder/>", content);
+        messageTemplate = TemplateUtils.replace(messageTemplate, "<role-placeholder/>", "agent");
         return messageTemplate;
     }
 

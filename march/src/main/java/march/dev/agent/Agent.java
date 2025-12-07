@@ -111,9 +111,7 @@ public abstract class Agent {
         while (true) {
             LlmResponse response = null;
             try {
-                String prompt = history + ephemeralContext;
-                ephemeralContext = "";
-
+                String prompt = this.chatSession.getHistory();
                 response = this.chatSession.getLlmResponse(prompt);
 
                 if (response.isFunctionCall()) {

@@ -59,7 +59,7 @@ public class App {
 
             GeminiClient geminiClient = new GeminiClient(geminiApiKey, "gemini-2.5-flash");
 
-            MyCustomAgent agent = new MyCustomAgent(geminiClient, toolRegistry, methodRunner, objectMapper);
+            MyCustomAgent agent = new MyCustomAgent(openRouterClient, toolRegistry, methodRunner, objectMapper);
 
             // Scanner for real-time input
             Scanner scanner = new Scanner(System.in);
