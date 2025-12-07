@@ -45,12 +45,11 @@ public class HistoryService {
     }
 
     public String archive(String historyChunk) {
-        String summary = llmClient.generate("Summarize the following conversation history concisely:\n" + historyChunk,
-                "gemini-2.5-flash");
+        String summary = llmClient.generate("Summarize the following conversation history concisely, return only text, not json or any other format, just text, do not use quotes or backtricks:\n" + historyChunk);
         String id = UUID.randomUUID().toString();
 
         try {
-            Files.writeString(Paths.get(historyDir + id + ".json"), historyChunk);
+            Files.writeString(Paths.get(historyDir + id + ".txt"), historyChunk);
 
             File indexFile = new File(historyDir + "index.json");
             List<Map<String, String>> index = objectMapper.readValue(indexFile,
@@ -87,7 +86,7 @@ public class HistoryService {
 
     public String getHistoryContent(String id) {
         try {
-            return Files.readString(Paths.get(historyDir + id + ".json"));
+            return Files.readString(Paths.get(historyDir + id + ".txt"));
         } catch (IOException e) {
             e.printStackTrace();
             return null;

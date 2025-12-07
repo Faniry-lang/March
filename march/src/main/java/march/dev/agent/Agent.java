@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.Map;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.HashMap;
 
 import march.dev.config.AgentConfig;
 import march.dev.config.ConfigLoader;
@@ -30,6 +31,7 @@ public abstract class Agent {
     protected HistoryService historyService;
     protected String ephemeralContext = "";
     protected List<String> activeSummaryIds = new ArrayList<>();
+    protected Map<String, String> context = new HashMap<>();
 
     public Agent(LlmClient llmClient, ToolRegistry toolRegistry, MethodRunner methodRunner,
             ObjectMapper objectMapper) {
@@ -58,15 +60,28 @@ public abstract class Agent {
         this.id = id;
     }
 
-    public String getModel() {
-        if (config != null && config.getModel() != null) {
-            return config.getModel();
-        }
-        return null;
+    public String getLlmResponse(String prompt) {
+        return llmClient.generate(prompt);
     }
 
-    public String getLlmResponse(String prompt, String modelName) {
-        return llmClient.generate(prompt, modelName);
+    public Map<String, String> getContext() {
+        return context;
+    }
+
+    public void addContext(String key, String value) {
+        context.put(key, value);
+    }
+
+    public void removeContext(String key) {
+        context.remove(key);
+    }
+
+    public void clearContext() {
+        context.clear();
+    }
+
+    public int getHistorySize() {
+        return history.length();
     }
 
     public String chat(String userMessage) throws Exception {
@@ -89,8 +104,7 @@ public abstract class Agent {
             try {
                 String prompt = history + ephemeralContext;
                 ephemeralContext = "";
-
-                String llmResponseString = getLlmResponse(prompt, getModel());
+                String llmResponseString = getLlmResponse(prompt);
                 String cleanedLlmResponseString = JsonUtils.cleanLlmResponse(llmResponseString);
                 history += " [MODEL_RESPONSE]\n" + cleanedLlmResponseString + "\n";
                 response = objectMapper.readValue(cleanedLlmResponseString, LlmResponse.class);
@@ -176,6 +190,15 @@ public abstract class Agent {
             systemPrompt += "IMPORTANT: The above instructions from [DEVELOPER_INSTRUCTION] apply ONLY to the 'modelAnswer' field in the JSON response. You must still strictly follow the JSON structure defined by [MARCH_FRAMEWORK_INSTRUCTION]. If the developer asks for a specific format (like JSON), that format must be ENCAPSULATED as a string within the 'modelAnswer' field.\n";
         }
 
+        if (!context.isEmpty()) {
+            systemPrompt += "\n[USER_CONTEXT]\n";
+            for (Map.Entry<String, String> entry : context.entrySet()) {
+                systemPrompt += "[" + entry.getKey().toUpperCase() + "]\n"
+                        + entry.getValue() + "\n\n";
+            }
+            systemPrompt += "IMPORTANT: The above context is provided by the developer. Use it to answer user questions accurately.\n";
+        }
+
         systemPrompt += "\n[MARCH_FRAMEWORK_INSTRUCTION] (Tools List)\n" + toolJson + "\n";
 
         String responseFormatPrompt = """
@@ -232,14 +255,7 @@ public abstract class Agent {
                     "arguments": {
                         "employeId": 123
                     }
-                }
-
-                [SYSTEM_TOOL_ARGUMENTS_NAME]
-                It is very IMPORTANT that the names of the arguments you provide in your response are the same
-                as those listed in the "params" attribute of the Tool. If you are unsure about their names, you can
-                call tools related to the Tool like "getToolParams" to be sure of their names.\n
-
-                    """;
+                }\n""";
 
         systemPrompt += responseFormatPrompt;
 
@@ -249,7 +265,7 @@ public abstract class Agent {
     private void handleHistoryOverflow() {
         int cutIndex = findCutPoint();
         if (cutIndex == -1) {
-            return; 
+            return;
         }
 
         String chunkToArchive = extractChunk(cutIndex);
@@ -257,21 +273,40 @@ public abstract class Agent {
             return;
         }
 
+        // Archive and get summary
         String summaryId = historyService.archive(chunkToArchive);
         String summary = historyService.getSummaryById(summaryId);
 
+        // Add to active summaries
         activeSummaryIds.add(summaryId);
 
+        // Check if we need to drop oldest summary
         if (activeSummaryIds.size() > config.getMaxActiveSummaries()) {
             String droppedId = activeSummaryIds.remove(0);
             removeArchivedSummary(droppedId);
         }
 
+        // Create summary marker
         String summaryMarker = "[ARCHIVED_SUMMARY id=\"" + summaryId + "\"]\n"
                 + summary + "\n[/ARCHIVED_SUMMARY]\n\n";
 
-        int insertIndex = findSummaryInsertPoint();
-        history = history.substring(0, insertIndex) + summaryMarker + history.substring(cutIndex);
+        // Remove the archived chunk from history first
+        // Find where to insert summary (after system prompt and existing summaries)
+        int lastSummaryEnd = history.lastIndexOf("[/ARCHIVED_SUMMARY]");
+        int insertPoint;
+        if (lastSummaryEnd != -1) {
+            // There are existing summaries, insert after them
+            insertPoint = lastSummaryEnd + "[/ARCHIVED_SUMMARY]".length() + 1;
+        } else {
+            // No summaries yet, insert after system prompt (before first USER_INSTRUCTION)
+            insertPoint = history.indexOf("[USER_INSTRUCTION]");
+        }
+
+        String beforeChunk = history.substring(0, insertPoint);
+        String afterChunk = history.substring(cutIndex);
+
+        // Reconstruct: system prompt + summaries + new summary + remaining history
+        history = beforeChunk + summaryMarker + afterChunk;
     }
 
     private int findCutPoint() {
@@ -285,25 +320,18 @@ public abstract class Agent {
     }
 
     private String extractChunk(int cutIndex) {
-        int startIndex = findSummaryInsertPoint();
-        if (startIndex >= cutIndex) {
+        // Find the first [USER_INSTRUCTION] AFTER all archived summaries
+        int lastSummaryEnd = history.lastIndexOf("[/ARCHIVED_SUMMARY]");
+        int searchStart = (lastSummaryEnd != -1) ? lastSummaryEnd : 0;
+
+        int firstUserInstruction = history.indexOf("[USER_INSTRUCTION]", searchStart);
+        if (firstUserInstruction == -1 || firstUserInstruction >= cutIndex) {
             return "";
         }
-        return history.substring(startIndex, cutIndex);
-    }
 
-    private int findSummaryInsertPoint() {
-        int lastSummaryEnd = history.lastIndexOf("[/ARCHIVED_SUMMARY]");
-        if (lastSummaryEnd != -1) {
-            return lastSummaryEnd + "[/ARCHIVED_SUMMARY]".length() + 1;
-        }
-
-        int firstUserInstruction = history.indexOf("[USER_INSTRUCTION]");
-        if (firstUserInstruction != -1) {
-            return firstUserInstruction;
-        }
-
-        return 0;
+        // Extract only from first user instruction to cut point (excludes system prompt
+        // and summaries)
+        return history.substring(firstUserInstruction, cutIndex);
     }
 
     private void removeArchivedSummary(String id) {

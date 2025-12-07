@@ -1,0 +1,14 @@
+com.openai.errors.UnauthorizedException: 401: OpenAIError{additionalProperties={error={message=No cookie auth credentials found, code=401}}}
+        at com.openai.core.handlers.ErrorHandler$withErrorHandler$1.handle(ErrorHandler.kt:53)
+        at com.openai.services.blocking.chat.CompletionServiceImpl.create(CompletionServiceImpl.kt:65)
+        at com.openai.services.blocking.chat.CompletionService.create$default(CompletionService.kt:28)
+        at com.openai.services.blocking.chat.CompletionService.create(CompletionService.kt)
+        at march.dev.llm.OpenRouterClient.generate(OpenRouterClient.java:52)
+        at march.dev.history.HistoryService.archive(HistoryService.java:48)
+        at march.dev.agent.Agent.handleHistoryOverflow(Agent.java:291)
+        at march.dev.agent.Agent.chat(Agent.java:107)
+        at march.sample.App.main(App.java:62)
+        at org.codehaus.mojo.exec.ExecJavaMojo$1.run(ExecJavaMojo.java:279)
+        at java.base/java.lang.Thread.run(Thread.java:1583)
+Error: 401: OpenAIError{additionalProperties={error={message=No cookie auth credentials found, code=401}}}
+[WARNING] thread Thread[#28,RetryingHttpClient,5,march.sample.App] was interrupted but is still alive after waiting at least 15000msecs

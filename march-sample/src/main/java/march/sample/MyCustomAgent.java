@@ -15,4 +15,12 @@ public class MyCustomAgent extends Agent {
             ObjectMapper objectMapper) {
         super(llmClient, toolRegistry, methodRunner, objectMapper);
     }
+
+    public void setConversationHistory(String history) {
+        addContext("conversation_history", history);
+    }
+
+    public void setUserProfile(String profile) {
+        addContext("user_profile", profile);
+    }
 }
