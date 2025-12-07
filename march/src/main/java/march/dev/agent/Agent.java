@@ -3,6 +3,8 @@ package march.dev.agent;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.Map;
+import java.util.ArrayList;
+import java.util.List;
 
 import march.dev.config.AgentConfig;
 import march.dev.config.ConfigLoader;
@@ -27,6 +29,7 @@ public abstract class Agent {
     protected AgentConfig config;
     protected HistoryService historyService;
     protected String ephemeralContext = "";
+    protected List<String> activeSummaryIds = new ArrayList<>();
 
     public Agent(LlmClient llmClient, ToolRegistry toolRegistry, MethodRunner methodRunner,
             ObjectMapper objectMapper) {
@@ -78,30 +81,15 @@ public abstract class Agent {
         int errorCount = 0;
 
         while (true) {
-            if (history.length() > config.getMaxHistorySize()) {
-                int cutIndex = history.indexOf("[USER_INSTRUCTION]", history.length() / 2);
-                if (cutIndex != -1) {
-                    String toArchive = history.substring(0, cutIndex);
-                    String toKeep = history.substring(cutIndex);
-
-                    if (toArchive.contains("[MARCH_FRAMEWORK_INSTRUCTION]")) {
-                         int systemPromptEnd = history.indexOf("[USER_INSTRUCTION]");
-                         if (systemPromptEnd != -1 && cutIndex > systemPromptEnd) {
-                             toArchive = history.substring(systemPromptEnd, cutIndex);
-                             toKeep = history.substring(0, systemPromptEnd) + history.substring(cutIndex);
-                         }
-                    }
-                    
-                    historyService.archive(toArchive);
-                    history = toKeep;
-                }
+            if (config != null && history.length() > config.getMaxHistorySize()) {
+                handleHistoryOverflow();
             }
 
             LlmResponse response = null;
             try {
                 String prompt = history + ephemeralContext;
-                ephemeralContext = ""; 
-                
+                ephemeralContext = "";
+
                 String llmResponseString = getLlmResponse(prompt, getModel());
                 String cleanedLlmResponseString = JsonUtils.cleanLlmResponse(llmResponseString);
                 history += " [MODEL_RESPONSE]\n" + cleanedLlmResponseString + "\n";
@@ -116,14 +104,17 @@ public abstract class Agent {
                     SystemResponse systemResponse = new SystemResponse(response.getStep(), response.getToolName(),
                             resultJson, args);
                     String systemResponseJson = objectMapper.writeValueAsString(systemResponse);
-                    
+
                     if (resultJson.contains("[EPHEMERAL]")) {
-                        String content = resultJson.substring(resultJson.indexOf("[EPHEMERAL]") + 11, resultJson.indexOf("[/EPHEMERAL]"));
-                        ephemeralContext = "\n[EPHEMERAL_HISTORY_CONTEXT]\n" + content + "\n[END_EPHEMERAL_HISTORY_CONTEXT]\n";
-                        systemResponse = new SystemResponse(response.getStep(), response.getToolName(), "History loaded for this turn.", args);
+                        String content = resultJson.substring(resultJson.indexOf("[EPHEMERAL]") + 11,
+                                resultJson.indexOf("[/EPHEMERAL]"));
+                        ephemeralContext = "\n[EPHEMERAL_HISTORY_CONTEXT]\n" + content
+                                + "\n[END_EPHEMERAL_HISTORY_CONTEXT]\n";
+                        systemResponse = new SystemResponse(response.getStep(), response.getToolName(),
+                                "History loaded for this turn.", args);
                         systemResponseJson = objectMapper.writeValueAsString(systemResponse);
                     }
-                    
+
                     history += " [BACKEND_RESPONSE]\n" + systemResponseJson + "\n";
                     continue;
                 }
@@ -168,11 +159,13 @@ public abstract class Agent {
                 3. [USER_INSTRUCTION]: Lowest priority. This is the user's query. You should answer it while respecting the constraints of the higher priorities.
 
                 Your goal is to answer any question from the user while strictly adhering to this hierarchy.
-                
+
                 Your Agent ID is: %s. You can use this ID to access your history tools.
                 You have access to your past history. If you need to recall something, use 'getHistorySummaries' with your ID to find relevant chunks, then 'getHistoryById' to load them.
+
+                ARCHIVED SUMMARIES: You may see [ARCHIVED_SUMMARY id="..."] markers in your history. These are summaries of past conversations that have been archived to save space. If you need more details about an archived conversation, use 'getHistoryById' with the ID from the marker.
                 """;
-        
+
         systemPrompt = String.format(systemPrompt, this.id);
 
         if (this.config != null && this.config.getSystemInstruction() != null) {
@@ -203,7 +196,7 @@ public abstract class Agent {
                 Your response must start directly with the opening brace '{' and end with the closing brace '}'.
                 The "step" attribute is the step number of the request, from 1 to n.
                 All comments you make must be in "modelThought";
-                the answer for the user will 
+                the answer for the user will
 
                 if the user's request does not require a function call, this will always be false.
                 The "toolName" attribute is the name of the tool you have chosen to answer the user's request.
@@ -248,8 +241,81 @@ public abstract class Agent {
 
                     """;
 
-        systemPrompt += responseFormatPrompt;        
+        systemPrompt += responseFormatPrompt;
 
         return systemPrompt;
+    }
+
+    private void handleHistoryOverflow() {
+        int cutIndex = findCutPoint();
+        if (cutIndex == -1) {
+            return; 
+        }
+
+        String chunkToArchive = extractChunk(cutIndex);
+        if (chunkToArchive.isEmpty()) {
+            return;
+        }
+
+        String summaryId = historyService.archive(chunkToArchive);
+        String summary = historyService.getSummaryById(summaryId);
+
+        activeSummaryIds.add(summaryId);
+
+        if (activeSummaryIds.size() > config.getMaxActiveSummaries()) {
+            String droppedId = activeSummaryIds.remove(0);
+            removeArchivedSummary(droppedId);
+        }
+
+        String summaryMarker = "[ARCHIVED_SUMMARY id=\"" + summaryId + "\"]\n"
+                + summary + "\n[/ARCHIVED_SUMMARY]\n\n";
+
+        int insertIndex = findSummaryInsertPoint();
+        history = history.substring(0, insertIndex) + summaryMarker + history.substring(cutIndex);
+    }
+
+    private int findCutPoint() {
+        int searchStart = history.indexOf("[USER_INSTRUCTION]");
+        if (searchStart == -1) {
+            return -1;
+        }
+
+        int cutIndex = history.indexOf("[USER_INSTRUCTION]", searchStart + 1);
+        return cutIndex;
+    }
+
+    private String extractChunk(int cutIndex) {
+        int startIndex = findSummaryInsertPoint();
+        if (startIndex >= cutIndex) {
+            return "";
+        }
+        return history.substring(startIndex, cutIndex);
+    }
+
+    private int findSummaryInsertPoint() {
+        int lastSummaryEnd = history.lastIndexOf("[/ARCHIVED_SUMMARY]");
+        if (lastSummaryEnd != -1) {
+            return lastSummaryEnd + "[/ARCHIVED_SUMMARY]".length() + 1;
+        }
+
+        int firstUserInstruction = history.indexOf("[USER_INSTRUCTION]");
+        if (firstUserInstruction != -1) {
+            return firstUserInstruction;
+        }
+
+        return 0;
+    }
+
+    private void removeArchivedSummary(String id) {
+        String startMarker = "[ARCHIVED_SUMMARY id=\"" + id + "\"]";
+        String endMarker = "[/ARCHIVED_SUMMARY]";
+
+        int startIndex = history.indexOf(startMarker);
+        if (startIndex != -1) {
+            int endIndex = history.indexOf(endMarker, startIndex);
+            if (endIndex != -1) {
+                history = history.substring(0, startIndex) + history.substring(endIndex + endMarker.length() + 1);
+            }
+        }
     }
 }

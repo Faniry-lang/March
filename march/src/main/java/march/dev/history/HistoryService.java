@@ -44,7 +44,7 @@ public class HistoryService {
         }
     }
 
-    public void archive(String historyChunk) {
+    public String archive(String historyChunk) {
         String summary = llmClient.generate("Summarize the following conversation history concisely:\n" + historyChunk,
                 "gemini-2.5-flash");
         String id = UUID.randomUUID().toString();
@@ -61,12 +61,15 @@ public class HistoryService {
             entry.put("id", id);
             entry.put("summary", summary);
             entry.put("timestamp", String.valueOf(System.currentTimeMillis()));
+            entry.put("order", String.valueOf(index.size() + 1));
             index.add(entry);
 
             objectMapper.writeValue(indexFile, index);
         } catch (IOException e) {
             e.printStackTrace();
         }
+
+        return id;
     }
 
     public List<Map<String, String>> getSummaries() {
@@ -89,5 +92,15 @@ public class HistoryService {
             e.printStackTrace();
             return null;
         }
+    }
+
+    public String getSummaryById(String id) {
+        List<Map<String, String>> summaries = getSummaries();
+        for (Map<String, String> entry : summaries) {
+            if (entry.get("id").equals(id)) {
+                return entry.get("summary");
+            }
+        }
+        return null;
     }
 }
