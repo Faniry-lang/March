@@ -88,7 +88,7 @@ public class App {
                 } catch (Exception e) {
                     System.out.println("Error generating response for request: " + e.getMessage());
                     agent.closeChatSession();
-                    // Recreate agent using the same OpenRouter client for next request
+                    // Recreate agent using the same OpenRouter client for next request if available
                     agent = new MyCustomAgent(openRouterClient, toolRegistry, methodRunner, objectMapper);
                 }
             }

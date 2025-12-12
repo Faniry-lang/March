@@ -10,68 +10,81 @@ public class JsonUtils {
             return "";
         }
 
+        String candidateWhole = llmResponse.trim();
         try {
-            MAPPER.readTree(llmResponse);
-            return llmResponse.trim();
+            MAPPER.readTree(candidateWhole);
+            return candidateWhole;
         } catch (Exception e) {
-            e.printStackTrace();
+            // ignore and try extraction heuristics
         }
 
-        int lastObjStart = -1;
-        int lastObjEnd = -1;
-        int depthObj = 0;
-        int objStart = -1;
-
-        int lastArrStart = -1;
-        int lastArrEnd = -1;
-        int depthArr = 0;
-        int arrStart = -1;
-
-        for (int i = 0; i < llmResponse.length(); i++) {
-            char c = llmResponse.charAt(i);
-
-            if (c == '{') {
-                if (depthObj == 0) objStart = i;
-                depthObj++;
-            } else if (c == '}') {
-                depthObj--;
-                if (depthObj == 0 && objStart != -1) {
-                    lastObjStart = objStart;
-                    lastObjEnd = i;
-                    objStart = -1;
+        // Try to extract JSON from common code-fence wrappers (```json ... ```) first
+        try {
+            java.util.regex.Pattern fence = java.util.regex.Pattern.compile("```(?:json)?\\s*([\\s\\S]*?)```",
+                    java.util.regex.Pattern.CASE_INSENSITIVE);
+            java.util.regex.Matcher m = fence.matcher(llmResponse);
+            if (m.find()) {
+                String inside = m.group(1).trim();
+                try {
+                    MAPPER.readTree(inside);
+                    return inside;
+                } catch (Exception ex) {
+                    // fallthrough to further extraction
                 }
-            } else if (c == '[') {
-                if (depthArr == 0) arrStart = i;
-                depthArr++;
-            } else if (c == ']') {
-                depthArr--;
-                if (depthArr == 0 && arrStart != -1) {
-                    lastArrStart = arrStart;
-                    lastArrEnd = i;
-                    arrStart = -1;
+            }
+        } catch (Exception ex) {
+            // ignore
+        }
+
+        // Remove surrounding backticks or code fences if present
+        String cleaned = candidateWhole;
+        // remove triple backticks wrappers
+        if (cleaned.startsWith("```") && cleaned.endsWith("```")) {
+            cleaned = cleaned.substring(3, cleaned.length() - 3).trim();
+        }
+        // strip single backtick wrappers
+        while (cleaned.startsWith("`") && cleaned.endsWith("`") && cleaned.length() > 1) {
+            cleaned = cleaned.substring(1, cleaned.length() - 1).trim();
+        }
+        // remove any remaining inline backticks
+        cleaned = cleaned.replace('`', ' ').trim();
+
+        // If the whole cleaned response is valid JSON, return it
+        try {
+            MAPPER.readTree(cleaned);
+            return cleaned;
+        } catch (Exception ex) {
+            // continue to scanning
+        }
+
+        // Scan for all balanced JSON objects/arrays and try parsing each (return first that parses)
+        int len = candidateWhole.length();
+        for (int i = 0; i < len; i++) {
+            char start = candidateWhole.charAt(i);
+            if (start != '{' && start != '[') continue;
+
+            int depth = 0;
+            for (int j = i; j < len; j++) {
+                char c = candidateWhole.charAt(j);
+                if (c == '{' || c == '[') depth++;
+                else if (c == '}' || c == ']') depth--;
+
+                if (depth == 0) {
+                    String candidate = candidateWhole.substring(i, j + 1).trim();
+                    // clean candidate from backticks
+                    candidate = candidate.replace('`', ' ').trim();
+                    try {
+                        MAPPER.readTree(candidate);
+                        return candidate;
+                    } catch (Exception e) {
+                        // try next balanced region
+                        break;
+                    }
                 }
             }
         }
 
-        String candidate = null;
-        if (lastObjStart != -1 && lastObjEnd != -1) {
-            candidate = llmResponse.substring(lastObjStart, lastObjEnd + 1).trim();
-        }
-
-        if ((lastArrStart != -1 && lastArrEnd != -1)
-                && (candidate == null || lastArrEnd > lastObjEnd)) {
-            candidate = llmResponse.substring(lastArrStart, lastArrEnd + 1).trim();
-        }
-
-        if (candidate != null) {
-            try {
-                MAPPER.readTree(candidate);
-                return candidate;
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }
-
+        // Nothing found
         return "";
     }
 }

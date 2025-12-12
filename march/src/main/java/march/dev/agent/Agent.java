@@ -228,9 +228,18 @@ public abstract class Agent {
             example.put("modelAnswer", "Here is a concise answer to the user request.");
             example.put("functionCall", false);
 
-            marchFramework.put("exampleResponse", example);
+            java.util.Map<String, Object> exampleFunction = new java.util.LinkedHashMap<>();
+            exampleFunction.put("step", 1);
+            exampleFunction.put("modelThought", "I will call a tool to compute this.");
+            exampleFunction.put("modelAnswer", "");
+            exampleFunction.put("functionCall", true);
+            exampleFunction.put("toolName", "computeFibonacci");
+            exampleFunction.put("arguments", java.util.Map.of("n", 12));
 
-            marchFramework.put("note", "Step is the current step of the user request process, modelThought is YOUR thought process, modelAnswer is YOUR answer for the user request. Return ONLY a single JSON object matching 'responseSchema'. Do not include any markdown, explanation, or extra text.");
+            marchFramework.put("exampleResponse", example);
+            marchFramework.put("exampleFunctionCall", exampleFunction);
+
+            marchFramework.put("note", "Return ONLY a single JSON object matching 'responseSchema'. Do NOT include markdown, explanations, or extra text. If you need to call a tool, set 'functionCall' to true and include 'toolName' and an 'arguments' object that matches the function parameter schema provided in the 'functions' message. Keep responses minimal and strictly JSON-formatted.");
 
             root.put("marchFramework", marchFramework);
 

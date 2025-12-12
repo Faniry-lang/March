@@ -69,30 +69,75 @@ public class OpenRouterClient implements LlmClient {
             .post(RequestBody.create(body, MediaType.parse("application/json")))
             .build();
 
-        try (Response response = client.newCall(request).execute()) {
-            if (!response.isSuccessful()) {
-                String respBody = response.body() != null ? response.body().string() : "empty response";
-                System.out.println("OpenRouter API returned error code " + response.code() + ": " + respBody);
-                throw new RuntimeException("OpenRouter error: " + response.code() + " " + respBody);
-            }
+        int maxRetries = 3;
+        long backoffMs = 500;
 
-            String json = response.body() != null ? response.body().string() : "";
-            if (json.isEmpty()) {
-                throw new RuntimeException("Empty response from OpenRouter API");
-            }
+        for (int attempt = 1; attempt <= maxRetries; attempt++) {
+            try (Response response = client.newCall(request).execute()) {
+                int code = response.code();
+                String respBody = response.body() != null ? response.body().string() : "";
 
-            return mapper.readTree(json)
-                         .get("choices")
-                         .get(0)
-                         .get("message")
-                         .get("content")
-                         .asText();
-        } catch (IOException e) {
-            System.out.println("Network/IO error during request: " + e.getMessage());
-            throw new RuntimeException(e);
-        } catch (Exception e) {
-            System.out.println("Unexpected error: " + e.getMessage());
-            throw new RuntimeException(e);
+                if (code == 401 || code == 403) {
+                    String hint = "";
+                    if (apiKey == null || apiKey.isEmpty()) {
+                        hint = " (no API key provided; ensure OPENROUTER_API_KEY is set or providerConfig.apiKey/apiKeyEnv is correct)";
+                    }
+                    throw new RuntimeException("OpenRouter authentication error: HTTP " + code + "." + hint + " Response: " + respBody);
+                }
+
+                if (code >= 500 || code == 429) {
+                    // transient server error or rate limit: may retry
+                    System.out.println("OpenRouter transient error (HTTP " + code + "). Attempt " + attempt + " of " + maxRetries + ". Response: " + respBody);
+                    if (attempt == maxRetries) {
+                        throw new RuntimeException("OpenRouter transient error after " + maxRetries + " attempts: " + code + " " + respBody);
+                    }
+                    // backoff with jitter
+                    try {
+                        long jitter = (long) (Math.random() * 200);
+                        Thread.sleep(backoffMs + jitter);
+                    } catch (InterruptedException ie) {
+                        Thread.currentThread().interrupt();
+                    }
+                    backoffMs *= 2;
+                    continue;
+                }
+
+                if (!response.isSuccessful()) {
+                    throw new RuntimeException("OpenRouter error: HTTP " + code + " Response: " + respBody);
+                }
+
+                String json = respBody != null ? respBody : "";
+                if (json.isEmpty()) {
+                    throw new RuntimeException("Empty response from OpenRouter API");
+                }
+
+                try {
+                    return mapper.readTree(json)
+                                 .get("choices")
+                                 .get(0)
+                                 .get("message")
+                                 .get("content")
+                                 .asText();
+                } catch (Exception parseEx) {
+                    throw new RuntimeException("Failed to parse OpenRouter response JSON: " + parseEx.getMessage() + "\nRaw: " + json, parseEx);
+                }
+            } catch (IOException e) {
+                // network issue: retry unless we've exhausted attempts
+                System.out.println("Network/IO error during OpenRouter request: " + e.getMessage() + ". Attempt " + attempt + " of " + maxRetries + ".");
+                if (attempt == maxRetries) {
+                    throw new RuntimeException("OpenRouter network error after " + maxRetries + " attempts: " + e.getMessage(), e);
+                }
+                try {
+                    long jitter = (long) (Math.random() * 200);
+                    Thread.sleep(backoffMs + jitter);
+                } catch (InterruptedException ie) {
+                    Thread.currentThread().interrupt();
+                }
+                backoffMs *= 2;
+                continue;
+            }
         }
+
+        throw new RuntimeException("Unreachable code in OpenRouterClient.generate");
     }
 }

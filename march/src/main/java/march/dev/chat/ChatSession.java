@@ -206,9 +206,26 @@ public class ChatSession {
                             + correctionExample + "\nDo not include any explanation or markdown.\n";
                 }
 
-                // Use the correction instruction as the new prompt to the model for a corrected JSON
-                prompt = correctionInstruction;
-                // loop and retry
+                // Insert the correction instruction as a new user message in the history so the model
+                // receives the full conversation context (functions, system prompt, etc.) on retry.
+                Message correctionMsg = new Message("user", correctionInstruction, null, null);
+                this.historyMessages.add(correctionMsg);
+
+                // Recompute the prompt from history so Agent.getLlmResponse receives full messages
+                try {
+                    prompt = this.getHistory();
+                } catch (Exception e) {
+                    prompt = correctionInstruction;
+                }
+
+                // Small backoff before retrying to avoid immediate hammering
+                try {
+                    Thread.sleep(300);
+                } catch (InterruptedException ie) {
+                    Thread.currentThread().interrupt();
+                }
+
+                // loop and retry with updated history
                 continue;
             }
         }
