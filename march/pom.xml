@@ -77,7 +77,18 @@
       <artifactId>json</artifactId>
       <version>20230227</version>
     </dependency>
-    <!-- Spring AI dependencies removed: using local LlmClient implementations instead -->
+<!-- https://mvnrepository.com/artifact/com.microsoft.onnxruntime/onnxruntime -->
+<dependency>
+    <groupId>com.microsoft.onnxruntime</groupId>
+    <artifactId>onnxruntime</artifactId>
+    <version>1.23.2</version>
+</dependency>
+<!-- https://mvnrepository.com/artifact/ai.djl.huggingface/tokenizers -->
+<dependency>
+    <groupId>ai.djl.huggingface</groupId>
+    <artifactId>tokenizers</artifactId>
+    <version>0.35.1</version>
+</dependency>
   </dependencies>
 
   <build>
