@@ -10,15 +10,13 @@ public class JsonUtils {
             return "";
         }
 
-        // Try parsing as-is first
         try {
             MAPPER.readTree(llmResponse);
             return llmResponse.trim();
         } catch (Exception e) {
-            // ignore and try to extract a balanced JSON substring
+            e.printStackTrace();
         }
 
-        // Attempt to find the last balanced JSON object or array in the string
         int lastObjStart = -1;
         int lastObjEnd = -1;
         int depthObj = 0;
@@ -70,7 +68,7 @@ public class JsonUtils {
                 MAPPER.readTree(candidate);
                 return candidate;
             } catch (Exception e) {
-                // fall through
+                e.printStackTrace();
             }
         }
 

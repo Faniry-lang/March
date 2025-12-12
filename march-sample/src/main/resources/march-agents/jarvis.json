@@ -7,10 +7,10 @@
     "maxHistorySize": 5000,
     "maxActiveSummaries": 3,
     "tokenBudget": 6000,
-    "provider": "gemini",
+    "provider": "openrouter",
     "providerConfig": {
-        "apiKeyEnv": "GEMINI_API_KEY",
-        "model": "gemini-2.5-flash"
+        "apiKeyEnv": "OPENROUTER_API_KEY",
+        "model": "nvidia/nemotron-nano-12b-v2-vl:free"
     },
     "toolTopN": 6,
     "maxLlmRetries": 2,

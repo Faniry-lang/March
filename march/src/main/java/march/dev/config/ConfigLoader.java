@@ -11,23 +11,69 @@ public class ConfigLoader {
 
     public static AgentConfig loadConfig(String agentId) throws IOException {
         Properties props = new Properties();
-        String basePath = "src/main/resources/march-agents/";
+        // Resolution order for agent config path:
+        // 1) System property -Dmarch.agents.path
+        // 2) Env var MARCH_AGENTS_PATH
+        // 3) march.properties (if present)
+        // 4) classpath resource march-agents/<agentId>.json
 
-        try (FileInputStream fis = new FileInputStream("src/main/resources/march.properties")) {
-            props.load(fis);
-            basePath = props.getProperty("march.agents.path", basePath);
-        } catch (IOException e) {
-            System.out.println("Could not load march.properties, using default path: " + basePath);
+        String basePath = System.getProperty("march.agents.path");
+        if (basePath == null || basePath.isBlank()) {
+            basePath = System.getenv("MARCH_AGENTS_PATH");
         }
 
-        if (!basePath.endsWith("/")) {
-            basePath += "/";
+        // Load march.properties only if no explicit path provided
+        if (basePath == null || basePath.isBlank()) {
+            try (FileInputStream fis = new FileInputStream("src/main/resources/march.properties")) {
+                props.load(fis);
+                basePath = props.getProperty("march.agents.path");
+            } catch (IOException e) {
+                // march.properties missing is acceptable; we'll try classpath later
+            }
         }
 
-        String filePath = basePath + agentId + ".json";
+        if (basePath != null && !basePath.isBlank()) {
+            if (!basePath.endsWith("/")) basePath += "/";
+        }
+
+        String filePath = basePath != null && !basePath.isBlank() ? basePath + agentId + ".json" : null;
 
         try {
-            AgentConfig config = objectMapper.readValue(new File(filePath), AgentConfig.class);
+            AgentConfig config = null;
+            if (filePath != null) {
+                java.nio.file.Path p = java.nio.file.Paths.get(filePath);
+                if (java.nio.file.Files.exists(p)) {
+                    config = objectMapper.readValue(p.toFile(), AgentConfig.class);
+                }
+            }
+
+            // If not found on filesystem, try classpath resource
+            if (config == null) {
+                String resourcePath = "march-agents/" + agentId + ".json";
+                java.io.InputStream is = Thread.currentThread().getContextClassLoader().getResourceAsStream(resourcePath);
+                if (is != null) {
+                    config = objectMapper.readValue(is, AgentConfig.class);
+                }
+            }
+
+            // If still null, throw to be handled by the catch below which returns default
+            if (config == null) throw new java.io.IOException("Agent config not found for '" + agentId + "' (tried filesystem and classpath)");
+
+            // Debug: print raw file content and the deserialized AgentConfig
+            try {
+                if (filePath != null) {
+                    String raw = java.nio.file.Files.readString(java.nio.file.Paths.get(filePath));
+                    System.out.println("[ConfigLoader] Raw config file content for '" + agentId + "':\n" + raw);
+                }
+            } catch (Exception e) {
+                // ignore raw read errors for classpath-loaded configs
+            }
+            try {
+                String cfgJson = objectMapper.writeValueAsString(config);
+                System.out.println("[ConfigLoader] Deserialized AgentConfig for '" + agentId + "':\n" + cfgJson);
+            } catch (Exception e) {
+                System.out.println("[ConfigLoader] Unable to serialize AgentConfig for debug output: " + e.getMessage());
+            }
             
             // If tokenBudget is not set or invalid in the file, load from properties or env
             if (config.getTokenBudget() <= 0) {

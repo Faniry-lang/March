@@ -64,30 +64,34 @@ public class App {
             // Pass `null` for llmClient so Agent uses LlmClientFactory with the jarvis.json settings
             MyCustomAgent agent = new MyCustomAgent(null, toolRegistry, methodRunner, objectMapper);
 
-            // Scanner for real-time input
-            Scanner scanner = new Scanner(System.in);
-            System.out.println("Type your message and press Enter (type 'exit' to quit):");
+            // Replace interactive mode with batch test requests to simulate production workload
+            String[] testRequests = new String[] {
+                "Compute the first 12 terms of the Fibonacci sequence and provide a short explanation of how you computed them.",
+                "Given portfolio: {AAPL: 50, MSFT: 20, TSLA: 5}, simulate a 1-year monthly return sequence with random noise and report final portfolio value and a short CSV of monthly values.",
+                "Summarize the following long document into 5 bullet points: Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed non risus... (repeat to make it long)",
+                "Perform a detailed statistical analysis (mean, median, stdev, 95% CI) for the list: 12, 15, 14, 19, 11, 22, 18, 17.",
+                "Translate the sentence 'Bonjour, comment allez-vous aujourd'hui?' to English and provide an alternate more formal phrasing.",
+                "Refactor this Java method for clarity and performance: public int[] reverse(int[] a){ int n=a.length; for(int i=0;i<n/2;i++){int t=a[i];a[i]=a[n-i-1];a[n-i-1]=t;} return a;}",
+                "Extract entities and dates from: 'Schedule a meeting with Dr. Smith on March 15th, 2026 at 3pm, and send follow up.'",
+                "Given a CSV content with columns (name,age,salary) with 1000 rows (simulate), compute median age and average salary per decade bucket and return as JSON.",
+                "Generate a 300-word technical report about scalable vector search architectures, include headers and a short conclusion.",
+                "Compute the shortest route visiting these coordinates (approx): (48.8566,2.3522),(51.5074,-0.1278),(40.7128,-74.0060) and explain the reasoning.",
+                "Given text: 'The battery lasts 10h under light use', output sentiment and a 2-sentence product blurb targeted at engineers.",
+                "Run a simulated heavy numeric task: multiply two 10x10 matrices filled with 1..100 and return the resulting matrix in CSV format."
+            };
 
-            while (true) {
-                System.out.print("> ");
-                String userInput = scanner.nextLine().trim();
-
-                if (userInput.equalsIgnoreCase("exit")) {
-                    System.out.println("Exiting...");
-                    break;
-                }
-
+            for (String request : testRequests) {
+                System.out.println("\n=== User Request ===\n" + request + "\n");
                 try {
-                    // Send user input to agent and get response
-                    String response = agent.chat(userInput);
-                    System.out.println("\nAI Response:\n" + response + "\n");
+                    String response = agent.chat(request);
+                    System.out.println("=== AI Response ===\n" + response + "\n");
                 } catch (Exception e) {
+                    System.out.println("Error generating response for request: " + e.getMessage());
                     agent.closeChatSession();
-                    System.out.println("Error generating response: " + e.getMessage());
+                    // Recreate agent using the same OpenRouter client for next request
+                    agent = new MyCustomAgent(openRouterClient, toolRegistry, methodRunner, objectMapper);
                 }
             }
-
-            scanner.close();
             agent.closeChatSession();
         } catch (Exception e) {
             e.printStackTrace();

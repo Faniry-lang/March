@@ -32,21 +32,19 @@ public class MethodRunner {
         Method method = tool.getMethod();
         if (args == null)
             args = new Object[] {};
-        // Try cache first
         try {
             com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
             String key = tool.getName() + ":" + mapper.writeValueAsString(args == null ? new Object[0] : args);
             String namespacedKey = (this.cacheKeyPrefix == null || this.cacheKeyPrefix.isEmpty()) ? key : (this.cacheKeyPrefix + ":" + key);
             String cached = this.cache.get(namespacedKey);
             if (cached != null) {
-                // Return cached value as deserialized object if possible
                 java.lang.reflect.Type returnType = tool.getReturnType();
                 if (returnType != null) {
                     try {
                         Object obj = mapper.readValue(cached, mapper.constructType(returnType));
                         return obj;
                     } catch (Exception e) {
-                        // fallback to invoking if deserialization fails
+                        e.printStackTrace();
                     }
                 } else {
                     return cached;
@@ -55,17 +53,15 @@ public class MethodRunner {
 
             Object result = method.invoke(providerInstance, args);
 
-            // Cache JSON-serialized result for future
             try {
                 String resJson = mapper.writeValueAsString(result);
                 this.cache.put(namespacedKey, resJson);
             } catch (Exception e) {
-                // ignore cache serialization errors
+                e.printStackTrace();
             }
 
             return result;
         } catch (IllegalArgumentException iae) {
-            // fallback to direct invocation
             return method.invoke(providerInstance, args);
         }
     }

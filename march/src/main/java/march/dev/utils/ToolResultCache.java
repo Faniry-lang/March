@@ -2,11 +2,6 @@ package march.dev.utils;
 
 import java.util.concurrent.ConcurrentHashMap;
 
-/**
- * Per-instance tool result cache. Agents should create their own instance
- * so caches are isolated per-agent. This replaces the previous static
- * global cache.
- */
 public class ToolResultCache {
 
     private static class Entry {
