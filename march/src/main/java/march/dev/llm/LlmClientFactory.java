@@ -46,7 +46,7 @@ public class LlmClientFactory {
                 apiKey = System.getenv("OPENROUTER_API_KEY");
             }
             String model = pconf != null && pconf.get("model") != null ? pconf.get("model") : config.getModel();
-            return new OpenRouterClient(apiKey, model);
+            return new OpenRouterClient(apiKey, model, config);
         }
 
         // OpenAI support (best-effort): if a providerConfig contains an 'apiKey' or 'apiKeyEnv',

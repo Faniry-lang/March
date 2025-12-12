@@ -239,7 +239,7 @@ public abstract class Agent {
             marchFramework.put("exampleResponse", example);
             marchFramework.put("exampleFunctionCall", exampleFunction);
 
-            marchFramework.put("note", "Return ONLY a single JSON object matching 'responseSchema'. Do NOT include markdown, explanations, or extra text. If you need to call a tool, set 'functionCall' to true and include 'toolName' and an 'arguments' object that matches the function parameter schema provided in the 'functions' message. Keep responses minimal and strictly JSON-formatted.");
+            marchFramework.put("note", "STRICT OUTPUT INSTRUCTIONS: RETURN ONLY a single JSON OBJECT that EXACTLY matches 'responseSchema'. DO NOT include any markdown, code fences, backticks, or explanatory text. If calling a tool, set 'functionCall' to true and include 'toolName' and an 'arguments' object that STRICTLY matches the provided function parameter schema. If you cannot produce valid JSON, return a minimal JSON object with a single 'error' string field describing the issue and nothing else. ALWAYS RETURN RAW JSON ONLY.");
 
             root.put("marchFramework", marchFramework);
 

@@ -1,5 +1,4 @@
 {
-    "model": "gemini-2.5-flash",
     "systemInstruction": {
         "role": "You are a helpful assistant named Jarvis, your role is to answer the user's request using the tools you have in hands and the context provided if needed",
         "answerFormat": "You must answer in English. Your answer must be a JSON object with fields 'response' and 'mood'."
@@ -10,7 +9,7 @@
     "provider": "openrouter",
     "providerConfig": {
         "apiKeyEnv": "OPENROUTER_API_KEY",
-        "model": "nvidia/nemotron-nano-12b-v2-vl:free"
+        "model": "deepseek/deepseek-r1"
     },
     "toolTopN": 6,
     "maxLlmRetries": 2,

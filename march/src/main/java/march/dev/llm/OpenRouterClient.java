@@ -21,21 +21,46 @@ public class OpenRouterClient implements LlmClient {
     private final String model;
     private final OkHttpClient client;
     private final ObjectMapper mapper;
+    private final int maxRetries;
+    private final long initialBackoffMs;
 
-    public OpenRouterClient(String apiKey, String model) {
+    public OpenRouterClient(String apiKey, String model, march.dev.config.AgentConfig config) {
         this.apiKey = apiKey;
         this.model = model;
         this.mapper = new ObjectMapper();
 
+        int connectSec = 15;
+        int readSec = 60;
+        int writeSec = 60;
+        int callSec = 120;
+        int retries = 3;
+        long backoff = 500;
+
+        try {
+            if (config != null) {
+                connectSec = config.getConnectTimeoutSec();
+                readSec = config.getReadTimeoutSec();
+                writeSec = config.getWriteTimeoutSec();
+                callSec = config.getCallTimeoutSec();
+                retries = Math.max(1, config.getMaxLlmRetries());
+                backoff = config.getLlmInitialBackoffMs();
+            }
+        } catch (Exception e) {
+            // use defaults
+        }
+
+        this.maxRetries = retries;
+        this.initialBackoffMs = backoff;
+
         HttpLoggingInterceptor loggingInterceptor = new HttpLoggingInterceptor(System.out::println);
-        loggingInterceptor.setLevel(HttpLoggingInterceptor.Level.BODY);
+        loggingInterceptor.setLevel(HttpLoggingInterceptor.Level.NONE);
 
         this.client = new OkHttpClient.Builder()
             .retryOnConnectionFailure(true)
-            .connectTimeout(Duration.ofSeconds(15))
-            .callTimeout(Duration.ofSeconds(60))
-            .readTimeout(Duration.ofSeconds(60))
-            .writeTimeout(Duration.ofSeconds(60))
+            .connectTimeout(Duration.ofSeconds(connectSec))
+            .callTimeout(Duration.ofSeconds(callSec))
+            .readTimeout(Duration.ofSeconds(readSec))
+            .writeTimeout(Duration.ofSeconds(writeSec))
             // .addInterceptor(loggingInterceptor)
             .build();
     }
@@ -69,8 +94,8 @@ public class OpenRouterClient implements LlmClient {
             .post(RequestBody.create(body, MediaType.parse("application/json")))
             .build();
 
-        int maxRetries = 3;
-        long backoffMs = 500;
+        int maxRetries = this.maxRetries;
+        long backoffMs = this.initialBackoffMs;
 
         for (int attempt = 1; attempt <= maxRetries; attempt++) {
             try (Response response = client.newCall(request).execute()) {

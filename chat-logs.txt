@@ -1,5 +1,68 @@
-faniry@faniry-X550CC:~/Documents/GitHub/March/march-sample$ export OPENROUTER_API_KEY="sk-or-v1-308f
-24917509cb47b983a1dcba148540a1fb81a75fcb920df6122397b670c9da"                                       faniry@faniry-X550CC:~/Documents/GitHub/March/march-sample$ mvn exec:java
+[INFO] Scanning for projects...
+[INFO] 
+[INFO] ---------------------< march.sample:march-sample >----------------------
+[INFO] Building march-sample 1.0-SNAPSHOT
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- maven-clean-plugin:2.5:clean (default-clean) @ march-sample ---
+[INFO] Deleting /home/faniry/Documents/GitHub/March/march-sample/target
+[INFO] 
+[INFO] --- maven-resources-plugin:2.6:resources (default-resources) @ march-sample ---
+[INFO] Using 'UTF-8' encoding to copy filtered resources.
+[INFO] Copying 3 resources
+[INFO] 
+[INFO] --- maven-compiler-plugin:3.13.0:compile (default-compile) @ march-sample ---
+[INFO] Recompiling the module because of changed source code.
+[INFO] Compiling 16 source files with javac [debug parameters release 17] to target/classes
+[INFO] Annotation processing is enabled because one or more processors were found
+  on the class path. A future release of javac may disable annotation processing
+  unless at least one processor is specified by name (-processor), or a search
+  path is specified (--processor-path, --processor-module-path), or annotation
+  processing is enabled explicitly (-proc:only, -proc:full).
+  Use -Xlint:-options to suppress this message.
+  Use -proc:none to disable annotation processing.
+[INFO] 
+[INFO] --- maven-resources-plugin:2.6:testResources (default-testResources) @ march-sample ---
+[INFO] Using 'UTF-8' encoding to copy filtered resources.
+[INFO] skip non existing resourceDirectory /home/faniry/Documents/GitHub/March/march-sample/src/test
+/resources                                                                                          [INFO] 
+[INFO] --- maven-compiler-plugin:3.13.0:testCompile (default-testCompile) @ march-sample ---
+[INFO] Recompiling the module because of changed dependency.
+[INFO] Compiling 1 source file with javac [debug parameters release 17] to target/test-classes
+[INFO] Annotation processing is enabled because one or more processors were found
+  on the class path. A future release of javac may disable annotation processing
+  unless at least one processor is specified by name (-processor), or a search
+  path is specified (--processor-path, --processor-module-path), or annotation
+  processing is enabled explicitly (-proc:only, -proc:full).
+  Use -Xlint:-options to suppress this message.
+  Use -proc:none to disable annotation processing.
+[INFO] 
+[INFO] --- maven-surefire-plugin:2.12.4:test (default-test) @ march-sample ---
+[INFO] Surefire report directory: /home/faniry/Documents/GitHub/March/march-sample/target/surefire-r
+eports                                                                                              
+-------------------------------------------------------
+ T E S T S
+-------------------------------------------------------
+Running march.sample.AppTest
+Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.001 sec
+
+Results :
+
+Tests run: 0, Failures: 0, Errors: 0, Skipped: 0
+
+[INFO] 
+[INFO] --- maven-jar-plugin:2.4:jar (default-jar) @ march-sample ---
+[INFO] Building jar: /home/faniry/Documents/GitHub/March/march-sample/target/march-sample-1.0-SNAPSH
+OT.jar                                                                                              [INFO] 
+[INFO] --- maven-install-plugin:2.4:install (default-install) @ march-sample ---
+[INFO] Installing /home/faniry/Documents/GitHub/March/march-sample/target/march-sample-1.0-SNAPSHOT.
+jar to /home/faniry/.m2/repository/march/sample/march-sample/1.0-SNAPSHOT/march-sample-1.0-SNAPSHOT.jar                                                                                                 [INFO] Installing /home/faniry/Documents/GitHub/March/march-sample/pom.xml to /home/faniry/.m2/repos
+itory/march/sample/march-sample/1.0-SNAPSHOT/march-sample-1.0-SNAPSHOT.pom                          [INFO] ------------------------------------------------------------------------
+[INFO] BUILD SUCCESS
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  6.191 s
+[INFO] Finished at: 2025-12-12T23:23:18+03:00
+[INFO] ------------------------------------------------------------------------
 [INFO] Scanning for projects...
 [INFO] 
 [INFO] ---------------------< march.sample:march-sample >----------------------
@@ -11,7 +74,6 @@ faniry@faniry-X550CC:~/Documents/GitHub/March/march-sample$ export OPENROUTER_AP
 
 [ConfigLoader] Raw config file content for 'jarvis':
 {
-    "model": "gemini-2.5-flash",
     "systemInstruction": {
         "role": "You are a helpful assistant named Jarvis, your role is to answer the user's request
  using the tools you have in hands and the context provided if needed",                                     "answerFormat": "You must answer in English. Your answer must be a JSON object with fields '
@@ -22,7 +84,7 @@ response' and 'mood'."                                                          
     "provider": "openrouter",
     "providerConfig": {
         "apiKeyEnv": "OPENROUTER_API_KEY",
-        "model": "nvidia/nemotron-nano-12b-v2-vl:free"
+        "model": "deepseek/deepseek-r1"
     },
     "toolTopN": 6,
     "maxLlmRetries": 2,
@@ -30,245 +92,420 @@ response' and 'mood'."                                                          
     "historyTransientEnabled": true
 }
 [ConfigLoader] Deserialized AgentConfig for 'jarvis':
-{"model":"gemini-2.5-flash","systemInstruction":{"role":"You are a helpful assistant named Jarvis, y
-our role is to answer the user's request using the tools you have in hands and the context provided if needed","answerFormat":"You must answer in English. Your answer must be a JSON object with fields 'response' and 'mood'."},"maxHistorySize":5000,"maxActiveSummaries":3,"tokenBudget":6000,"provider":"openrouter","providerConfig":{"apiKeyEnv":"OPENROUTER_API_KEY","model":"nvidia/nemotron-nano-12b-v2-vl:free"},"toolTopN":6,"maxLlmRetries":2,"cacheTtlMs":300000,"historyTransientEnabled":true,"historyDir":null}                                                                                        LlmClient not provided, attempting to create from agent config...
+{"model":null,"systemInstruction":{"role":"You are a helpful assistant named Jarvis, your role is to
+ answer the user's request using the tools you have in hands and the context provided if needed","answerFormat":"You must answer in English. Your answer must be a JSON object with fields 'response' and 'mood'."},"maxHistorySize":5000,"maxActiveSummaries":3,"tokenBudget":6000,"connectTimeoutSec":15,"readTimeoutSec":60,"writeTimeoutSec":60,"callTimeoutSec":120,"llmInitialBackoffMs":500,"provider":"openrouter","providerConfig":{"apiKeyEnv":"OPENROUTER_API_KEY","model":"deepseek/deepseek-r1"},"toolTopN":6,"maxLlmRetries":2,"cacheTtlMs":300000,"historyTransientEnabled":true,"historyDir":null}      LlmClient not provided, attempting to create from agent config...
 
 === User Request ===
 Compute the first 12 terms of the Fibonacci sequence and provide a short explanation of how you comp
 uted them.                                                                                          
 === AI Response ===
-The first 12 Fibonacci numbers are:
-0 (0), 1 (1), 1 (0+1), 2 (1+1), 3 (1+2), 5 (2+3), 8 (3+5), 13 (5+8), 21 (8+13), 34 (13+21), 55 (21+3
-4), 89 (34+55).                                                                                     
-Explanation: Each number is the sum of the two preceding ones starting from 0 and 1. The sequence de
-monstrates additive recursion with exponential growth.                                              
+The first 12 Fibonacci terms are: 0, 1, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89. These were computed itera
+tively: starting with 0 and 1, each subsequent term is the sum of the two preceding terms (e.g., 0+1=1, 1+1=2, 1+2=3, etc.).                                                                            
 
 === User Request ===
 Given portfolio: {AAPL: 50, MSFT: 20, TSLA: 5}, simulate a 1-year monthly return sequence with rando
 m noise and report final portfolio value and a short CSV of monthly values.                         
-com.fasterxml.jackson.core.JsonParseException: Unexpected character ('`' (code 96)): expected a vali
-d value (JSON String, Number, Array, Object or token 'null', 'true' or 'false')                      at [Source: REDACTED (`StreamReadFeature.INCLUDE_SOURCE_IN_LOCATION` disabled); line: 1, column: 1]
-        at com.fasterxml.jackson.core.JsonParser._constructReadException(JsonParser.java:2660)
-        at com.fasterxml.jackson.core.base.ParserMinimalBase._reportUnexpectedChar(ParserMinimalBase
-.java:741)                                                                                                  at com.fasterxml.jackson.core.json.ReaderBasedJsonParser._handleOddValue(ReaderBasedJsonPars
-er.java:2054)                                                                                               at com.fasterxml.jackson.core.json.ReaderBasedJsonParser.nextToken(ReaderBasedJsonParser.jav
-a:780)                                                                                                      at com.fasterxml.jackson.databind.ObjectMapper._readTreeAndClose(ObjectMapper.java:4946)
-        at com.fasterxml.jackson.databind.ObjectMapper.readTree(ObjectMapper.java:3281)
-        at march.dev.utils.JsonUtils.cleanLlmResponse(JsonUtils.java:14)
-        at march.dev.chat.ChatSession.getLlmResponse(ChatSession.java:157)
-        at march.dev.agent.Agent.chat(Agent.java:156)
-        at march.sample.App.main(App.java:86)
-        at org.codehaus.mojo.exec.ExecJavaMojo$1.run(ExecJavaMojo.java:279)
-        at java.base/java.lang.Thread.run(Thread.java:1583)
-Network/IO error during request: timeout
-java.lang.RuntimeException: java.io.InterruptedIOException: timeout
-        at march.dev.llm.OpenRouterClient.generate(OpenRouterClient.java:92)
-        at march.dev.agent.Agent.getLlmResponse(Agent.java:92)
-        at march.dev.chat.ChatSession.getLlmResponse(ChatSession.java:156)
-        at march.dev.agent.Agent.chat(Agent.java:156)
-        at march.sample.App.main(App.java:86)
-        at org.codehaus.mojo.exec.ExecJavaMojo$1.run(ExecJavaMojo.java:279)
-        at java.base/java.lang.Thread.run(Thread.java:1583)
-Caused by: java.io.InterruptedIOException: timeout
-        at okhttp3.internal.connection.RealCall.timeoutExit(RealCall.kt:398)
-        at okhttp3.internal.connection.RealCall.callDone(RealCall.kt:360)
-        at okhttp3.internal.connection.RealCall.messageDone$okhttp(RealCall.kt:309)
-        at okhttp3.internal.connection.Exchange.bodyComplete(Exchange.kt:198)
-        at okhttp3.internal.connection.Exchange$ResponseBodySource.complete(Exchange.kt:329)
-        at okhttp3.internal.connection.Exchange$ResponseBodySource.read(Exchange.kt:305)
-        at okio.RealBufferedSource.read(RealBufferedSource.kt:192)
-        at okio.RealBufferedSource.exhausted(RealBufferedSource.kt:200)
-        at okio.InflaterSource.refill(InflaterSource.kt:112)
-        at okio.InflaterSource.readOrInflate(InflaterSource.kt:76)
-        at okio.InflaterSource.read(InflaterSource.kt:49)
-        at okio.GzipSource.read(GzipSource.kt:69)
-        at okio.Buffer.writeAll(Buffer.kt:1303)
-        at okio.RealBufferedSource.readString(RealBufferedSource.kt:96)
-        at okhttp3.ResponseBody.string(ResponseBody.kt:187)
-        at march.dev.llm.OpenRouterClient.generate(OpenRouterClient.java:79)
-        ... 6 more
-Caused by: okhttp3.internal.http2.StreamResetException: stream was reset: CANCEL
-        at okhttp3.internal.http2.Http2Stream$FramingSource.read(Http2Stream.kt:355)
-        at okhttp3.internal.connection.Exchange$ResponseBodySource.read(Exchange.kt:281)
-        ... 16 more
-Erreur: java.io.InterruptedIOException: timeout
-com.fasterxml.jackson.core.JsonParseException: Unrecognized token 'The': was expecting (JSON String,
- Number, Array, Object or token 'null', 'true' or 'false')                                           at [Source: REDACTED (`StreamReadFeature.INCLUDE_SOURCE_IN_LOCATION` disabled); line: 1, column: 4]
-        at com.fasterxml.jackson.core.JsonParser._constructError(JsonParser.java:2584)
-        at com.fasterxml.jackson.core.JsonParser._constructReadException(JsonParser.java:2610)
-        at com.fasterxml.jackson.core.JsonParser._constructReadException(JsonParser.java:2618)
-        at com.fasterxml.jackson.core.base.ParserMinimalBase._reportError(ParserMinimalBase.java:825
-)                                                                                                           at com.fasterxml.jackson.core.json.ReaderBasedJsonParser._reportInvalidToken(ReaderBasedJson
-Parser.java:3017)                                                                                           at com.fasterxml.jackson.core.json.ReaderBasedJsonParser._handleOddValue(ReaderBasedJsonPars
-er.java:2051)                                                                                               at com.fasterxml.jackson.core.json.ReaderBasedJsonParser.nextToken(ReaderBasedJsonParser.jav
-a:780)                                                                                                      at com.fasterxml.jackson.databind.ObjectMapper._readTreeAndClose(ObjectMapper.java:4946)
-        at com.fasterxml.jackson.databind.ObjectMapper.readTree(ObjectMapper.java:3281)
-        at march.dev.utils.JsonUtils.cleanLlmResponse(JsonUtils.java:14)
-        at march.dev.chat.ChatSession.getLlmResponse(ChatSession.java:157)
-        at march.dev.agent.Agent.chat(Agent.java:156)
-        at march.sample.App.main(App.java:86)
-        at org.codehaus.mojo.exec.ExecJavaMojo$1.run(ExecJavaMojo.java:279)
-        at java.base/java.lang.Thread.run(Thread.java:1583)
+Network/IO error during OpenRouter request: timeout. Attempt 1 of 2.
 === AI Response ===
-The first 12 terms of the Fibonacci sequence are: **0, 1, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89**
-
-**Explanation**: The Fibonacci sequence starts with 0 and 1. Each subsequent term is the sum of the 
-two preceding terms. Here's the derivation:                                                         - Term 3: 0 + 1 = 1
-- Term 4: 1 + 1 = 2
-- Term 5: 1 + 2 = 3
-- Term 6: 2 + 3 = 5
-- Term 7: 3 + 5 = 8
-- Term 8: 5 + 8 = 13
-- Term 9: 8 + 13 = 21
-- Term 10: 13 + 21 = 34
-- Term 11: 21 + 34 = 55
-- Term 12: 34 + 55 = 89
-This recursive process generates the sequence's exponential growth pattern.
+Final portfolio value after 12 months: $113,437.72
+CSV monthly values:
+month,value
+1,100906,10
+2,102212,04
+3,103719,06
+4,104499,92
+5,104905,68
+6,105588,64
+7,106234,20
+8,108395,00
+9,109160,63
+10,110504,47
+11,112369,00
+12,113437,72
 
 
 === User Request ===
 Summarize the following long document into 5 bullet points: Lorem ipsum dolor sit amet, consectetur 
 adipiscing elit. Sed non risus... (repeat to make it long)                                          
+Network/IO error during OpenRouter request: timeout. Attempt 1 of 2.
 === AI Response ===
-The first 5 key points from the document are:
-- Introduction to the topic with foundational concepts
-- Development of the core methodology
-- Implementation challenges and solutions
-- Results analysis and interpretation
-- Conclusion with future directions
+- Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+- Sed non risus..
+- (repeat to make it long).
 
 
 === User Request ===
 Perform a detailed statistical analysis (mean, median, stdev, 95% CI) for the list: 12, 15, 14, 19, 
 11, 22, 18, 17.                                                                                     
-com.fasterxml.jackson.core.JsonParseException: Unexpected character ('`' (code 96)): expected a vali
-d value (JSON String, Number, Array, Object or token 'null', 'true' or 'false')                      at [Source: REDACTED (`StreamReadFeature.INCLUDE_SOURCE_IN_LOCATION` disabled); line: 1, column: 1]
-        at com.fasterxml.jackson.core.JsonParser._constructReadException(JsonParser.java:2660)
-        at com.fasterxml.jackson.core.base.ParserMinimalBase._reportUnexpectedChar(ParserMinimalBase
-.java:741)                                                                                                  at com.fasterxml.jackson.core.json.ReaderBasedJsonParser._handleOddValue(ReaderBasedJsonPars
-er.java:2054)                                                                                               at com.fasterxml.jackson.core.json.ReaderBasedJsonParser.nextToken(ReaderBasedJsonParser.jav
-a:780)                                                                                                      at com.fasterxml.jackson.databind.ObjectMapper._readTreeAndClose(ObjectMapper.java:4946)
-        at com.fasterxml.jackson.databind.ObjectMapper.readTree(ObjectMapper.java:3281)
-        at march.dev.utils.JsonUtils.cleanLlmResponse(JsonUtils.java:14)
-        at march.dev.chat.ChatSession.getLlmResponse(ChatSession.java:157)
+java.lang.RuntimeException: OpenRouter error: HTTP 402 Response: {"error":{"message":"This request r
+equires more credits, or fewer max_tokens. You requested up to 4096 tokens, but can only afford 3243. To increase, visit https://openrouter.ai/settings/credits and upgrade to a paid account","code":402,"metadata":{"provider_name":null}},"user_id":"user_35CtB02xAJdj92hrONhRxD7hgvz"}                          at march.dev.llm.OpenRouterClient.generate(OpenRouterClient.java:131)
+        at march.dev.agent.Agent.getLlmResponse(Agent.java:92)
+        at march.dev.chat.ChatSession.getLlmResponse(ChatSession.java:156)
         at march.dev.agent.Agent.chat(Agent.java:156)
-        at march.sample.App.main(App.java:86)
+        at march.sample.App.main(App.java:87)
         at org.codehaus.mojo.exec.ExecJavaMojo$1.run(ExecJavaMojo.java:279)
         at java.base/java.lang.Thread.run(Thread.java:1583)
-com.fasterxml.jackson.core.JsonParseException: Unexpected character ('`' (code 96)): expected a vali
-d value (JSON String, Number, Array, Object or token 'null', 'true' or 'false')                      at [Source: REDACTED (`StreamReadFeature.INCLUDE_SOURCE_IN_LOCATION` disabled); line: 1, column: 1]
-        at com.fasterxml.jackson.core.JsonParser._constructReadException(JsonParser.java:2660)
-        at com.fasterxml.jackson.core.base.ParserMinimalBase._reportUnexpectedChar(ParserMinimalBase
-.java:741)                                                                                                  at com.fasterxml.jackson.core.json.ReaderBasedJsonParser._handleOddValue(ReaderBasedJsonPars
-er.java:2054)                                                                                               at com.fasterxml.jackson.core.json.ReaderBasedJsonParser.nextToken(ReaderBasedJsonParser.jav
-a:780)                                                                                                      at com.fasterxml.jackson.databind.ObjectMapper._readTreeAndClose(ObjectMapper.java:4946)
-        at com.fasterxml.jackson.databind.ObjectMapper.readTree(ObjectMapper.java:3281)
-        at march.dev.utils.JsonUtils.cleanLlmResponse(JsonUtils.java:14)
-        at march.dev.chat.ChatSession.getLlmResponse(ChatSession.java:157)
+Erreur: OpenRouter error: HTTP 402 Response: {"error":{"message":"This request requires more credits
+, or fewer max_tokens. You requested up to 4096 tokens, but can only afford 3243. To increase, visit https://openrouter.ai/settings/credits and upgrade to a paid account","code":402,"metadata":{"provider_name":null}},"user_id":"user_35CtB02xAJdj92hrONhRxD7hgvz"}                                      java.lang.RuntimeException: OpenRouter error: HTTP 402 Response: {"error":{"message":"This request r
+equires more credits, or fewer max_tokens. You requested up to 4096 tokens, but can only afford 3243. To increase, visit https://openrouter.ai/settings/credits and upgrade to a paid account","code":402,"metadata":{"provider_name":null}},"user_id":"user_35CtB02xAJdj92hrONhRxD7hgvz"}                          at march.dev.llm.OpenRouterClient.generate(OpenRouterClient.java:131)
+        at march.dev.agent.Agent.getLlmResponse(Agent.java:92)
+        at march.dev.chat.ChatSession.getLlmResponse(ChatSession.java:156)
         at march.dev.agent.Agent.chat(Agent.java:156)
-        at march.sample.App.main(App.java:86)
+        at march.sample.App.main(App.java:87)
         at org.codehaus.mojo.exec.ExecJavaMojo$1.run(ExecJavaMojo.java:279)
         at java.base/java.lang.Thread.run(Thread.java:1583)
-java.lang.IllegalArgumentException: Cannot construct instance of `double[]`: no String-argument cons
-tructor/factory method to deserialize from String value ('[12, 15, 14, 19, 11, 22, 18, 17]')         at [Source: UNKNOWN; byte offset: #UNKNOWN]
-        at com.fasterxml.jackson.databind.ObjectMapper._convert(ObjectMapper.java:4636)
-        at com.fasterxml.jackson.databind.ObjectMapper.convertValue(ObjectMapper.java:4587)
-        at march.dev.process.LlmResponse.getOrderedAndTypedArgs(LlmResponse.java:121)
-        at march.dev.chat.ChatSession.executeOrder(ChatSession.java:286)
-        at march.dev.agent.Agent.chat(Agent.java:159)
-        at march.sample.App.main(App.java:86)
-        at org.codehaus.mojo.exec.ExecJavaMojo$1.run(ExecJavaMojo.java:279)
-        at java.base/java.lang.Thread.run(Thread.java:1583)
-Caused by: com.fasterxml.jackson.databind.exc.InvalidDefinitionException: Cannot construct instance 
-of `double[]`: no String-argument constructor/factory method to deserialize from String value ('[12, 15, 14, 19, 11, 22, 18, 17]')                                                                       at [Source: UNKNOWN; byte offset: #UNKNOWN]
-        at com.fasterxml.jackson.databind.exc.InvalidDefinitionException.from(InvalidDefinitionExcep
-tion.java:67)                                                                                               at com.fasterxml.jackson.databind.DeserializationContext.reportBadDefinition(Deserialization
-Context.java:1888)                                                                                          at com.fasterxml.jackson.databind.DatabindContext.reportBadDefinition(DatabindContext.java:4
-14)                                                                                                         at com.fasterxml.jackson.databind.DeserializationContext.handleMissingInstantiator(Deseriali
-zationContext.java:1370)                                                                                    at com.fasterxml.jackson.databind.deser.std.StdDeserializer._deserializeFromString(StdDeseri
-alizer.java:311)                                                                                            at com.fasterxml.jackson.databind.deser.std.PrimitiveArrayDeserializers.handleNonArray(Primi
-tiveArrayDeserializers.java:219)                                                                            at com.fasterxml.jackson.databind.deser.std.PrimitiveArrayDeserializers$DoubleDeser.deserial
-ize(PrimitiveArrayDeserializers.java:890)                                                                   at com.fasterxml.jackson.databind.deser.std.PrimitiveArrayDeserializers$DoubleDeser.deserial
-ize(PrimitiveArrayDeserializers.java:864)                                                                   at com.fasterxml.jackson.databind.ObjectMapper._convert(ObjectMapper.java:4631)
-        ... 7 more
-Erreur: Cannot construct instance of `double[]`: no String-argument constructor/factory method to de
-serialize from String value ('[12, 15, 14, 19, 11, 22, 18, 17]')                                     at [Source: UNKNOWN; byte offset: #UNKNOWN]
-com.fasterxml.jackson.core.JsonParseException: Unrecognized token 'The': was expecting (JSON String,
- Number, Array, Object or token 'null', 'true' or 'false')                                           at [Source: REDACTED (`StreamReadFeature.INCLUDE_SOURCE_IN_LOCATION` disabled); line: 1, column: 4]
-        at com.fasterxml.jackson.core.JsonParser._constructError(JsonParser.java:2584)
-        at com.fasterxml.jackson.core.JsonParser._constructReadException(JsonParser.java:2610)
-        at com.fasterxml.jackson.core.JsonParser._constructReadException(JsonParser.java:2618)
-        at com.fasterxml.jackson.core.base.ParserMinimalBase._reportError(ParserMinimalBase.java:825
-)                                                                                                           at com.fasterxml.jackson.core.json.ReaderBasedJsonParser._reportInvalidToken(ReaderBasedJson
-Parser.java:3017)                                                                                           at com.fasterxml.jackson.core.json.ReaderBasedJsonParser._handleOddValue(ReaderBasedJsonPars
-er.java:2051)                                                                                               at com.fasterxml.jackson.core.json.ReaderBasedJsonParser.nextToken(ReaderBasedJsonParser.jav
-a:780)                                                                                                      at com.fasterxml.jackson.databind.ObjectMapper._readTreeAndClose(ObjectMapper.java:4946)
-        at com.fasterxml.jackson.databind.ObjectMapper.readTree(ObjectMapper.java:3281)
-        at march.dev.utils.JsonUtils.cleanLlmResponse(JsonUtils.java:14)
-        at march.dev.chat.ChatSession.getLlmResponse(ChatSession.java:157)
+Erreur: OpenRouter error: HTTP 402 Response: {"error":{"message":"This request requires more credits
+, or fewer max_tokens. You requested up to 4096 tokens, but can only afford 3243. To increase, visit https://openrouter.ai/settings/credits and upgrade to a paid account","code":402,"metadata":{"provider_name":null}},"user_id":"user_35CtB02xAJdj92hrONhRxD7hgvz"}                                      java.lang.RuntimeException: OpenRouter error: HTTP 402 Response: {"error":{"message":"This request r
+equires more credits, or fewer max_tokens. You requested up to 4096 tokens, but can only afford 3243. To increase, visit https://openrouter.ai/settings/credits and upgrade to a paid account","code":402,"metadata":{"provider_name":null}},"user_id":"user_35CtB02xAJdj92hrONhRxD7hgvz"}                          at march.dev.llm.OpenRouterClient.generate(OpenRouterClient.java:131)
+        at march.dev.agent.Agent.getLlmResponse(Agent.java:92)
+        at march.dev.chat.ChatSession.getLlmResponse(ChatSession.java:156)
         at march.dev.agent.Agent.chat(Agent.java:156)
-        at march.sample.App.main(App.java:86)
+        at march.sample.App.main(App.java:87)
         at org.codehaus.mojo.exec.ExecJavaMojo$1.run(ExecJavaMojo.java:279)
         at java.base/java.lang.Thread.run(Thread.java:1583)
-java.lang.IllegalArgumentException: Cannot construct instance of `double[]`: no String-argument cons
-tructor/factory method to deserialize from String value ('12,15,14,19,11,22,18,17')                  at [Source: UNKNOWN; byte offset: #UNKNOWN]
-        at com.fasterxml.jackson.databind.ObjectMapper._convert(ObjectMapper.java:4636)
-        at com.fasterxml.jackson.databind.ObjectMapper.convertValue(ObjectMapper.java:4587)
-        at march.dev.process.LlmResponse.getOrderedAndTypedArgs(LlmResponse.java:121)
-        at march.dev.chat.ChatSession.executeOrder(ChatSession.java:286)
-        at march.dev.agent.Agent.chat(Agent.java:159)
-        at march.sample.App.main(App.java:86)
+Erreur: OpenRouter error: HTTP 402 Response: {"error":{"message":"This request requires more credits
+, or fewer max_tokens. You requested up to 4096 tokens, but can only afford 3243. To increase, visit https://openrouter.ai/settings/credits and upgrade to a paid account","code":402,"metadata":{"provider_name":null}},"user_id":"user_35CtB02xAJdj92hrONhRxD7hgvz"}                                      java.lang.RuntimeException: OpenRouter error: HTTP 402 Response: {"error":{"message":"This request r
+equires more credits, or fewer max_tokens. You requested up to 4096 tokens, but can only afford 3243. To increase, visit https://openrouter.ai/settings/credits and upgrade to a paid account","code":402,"metadata":{"provider_name":null}},"user_id":"user_35CtB02xAJdj92hrONhRxD7hgvz"}                          at march.dev.llm.OpenRouterClient.generate(OpenRouterClient.java:131)
+        at march.dev.agent.Agent.getLlmResponse(Agent.java:92)
+        at march.dev.chat.ChatSession.getLlmResponse(ChatSession.java:156)
+        at march.dev.agent.Agent.chat(Agent.java:156)
+        at march.sample.App.main(App.java:87)
         at org.codehaus.mojo.exec.ExecJavaMojo$1.run(ExecJavaMojo.java:279)
         at java.base/java.lang.Thread.run(Thread.java:1583)
-Caused by: com.fasterxml.jackson.databind.exc.InvalidDefinitionException: Cannot construct instance 
-of `double[]`: no String-argument constructor/factory method to deserialize from String value ('12,15,14,19,11,22,18,17')                                                                                at [Source: UNKNOWN; byte offset: #UNKNOWN]
-        at com.fasterxml.jackson.databind.exc.InvalidDefinitionException.from(InvalidDefinitionExcep
-tion.java:67)                                                                                               at com.fasterxml.jackson.databind.DeserializationContext.reportBadDefinition(Deserialization
-Context.java:1888)                                                                                          at com.fasterxml.jackson.databind.DatabindContext.reportBadDefinition(DatabindContext.java:4
-14)                                                                                                         at com.fasterxml.jackson.databind.DeserializationContext.handleMissingInstantiator(Deseriali
-zationContext.java:1370)                                                                                    at com.fasterxml.jackson.databind.deser.std.StdDeserializer._deserializeFromString(StdDeseri
-alizer.java:311)                                                                                            at com.fasterxml.jackson.databind.deser.std.PrimitiveArrayDeserializers.handleNonArray(Primi
-tiveArrayDeserializers.java:219)                                                                            at com.fasterxml.jackson.databind.deser.std.PrimitiveArrayDeserializers$DoubleDeser.deserial
-ize(PrimitiveArrayDeserializers.java:890)                                                                   at com.fasterxml.jackson.databind.deser.std.PrimitiveArrayDeserializers$DoubleDeser.deserial
-ize(PrimitiveArrayDeserializers.java:864)                                                                   at com.fasterxml.jackson.databind.ObjectMapper._convert(ObjectMapper.java:4631)
-        ... 7 more
-Erreur: Cannot construct instance of `double[]`: no String-argument constructor/factory method to de
-serialize from String value ('12,15,14,19,11,22,18,17')                                              at [Source: UNKNOWN; byte offset: #UNKNOWN]
-=== AI Response ===
-Corrected JSON structure example provided.
+Erreur: OpenRouter error: HTTP 402 Response: {"error":{"message":"This request requires more credits
+, or fewer max_tokens. You requested up to 4096 tokens, but can only afford 3243. To increase, visit https://openrouter.ai/settings/credits and upgrade to a paid account","code":402,"metadata":{"provider_name":null}},"user_id":"user_35CtB02xAJdj92hrONhRxD7hgvz"}                                      === AI Response ===
+Erreur lors de la génération de la réponse...
 
 
 === User Request ===
 Translate the sentence 'Bonjour, comment allez-vous aujourd'hui?' to English and provide an alternat
 e more formal phrasing.                                                                             
-com.fasterxml.jackson.core.JsonParseException: Unrecognized token 'The': was expecting (JSON String,
- Number, Array, Object or token 'null', 'true' or 'false')                                           at [Source: REDACTED (`StreamReadFeature.INCLUDE_SOURCE_IN_LOCATION` disabled); line: 1, column: 4]
-        at com.fasterxml.jackson.core.JsonParser._constructError(JsonParser.java:2584)
-        at com.fasterxml.jackson.core.JsonParser._constructReadException(JsonParser.java:2610)
-        at com.fasterxml.jackson.core.JsonParser._constructReadException(JsonParser.java:2618)
-        at com.fasterxml.jackson.core.base.ParserMinimalBase._reportError(ParserMinimalBase.java:825
-)                                                                                                           at com.fasterxml.jackson.core.json.ReaderBasedJsonParser._reportInvalidToken(ReaderBasedJson
-Parser.java:3017)                                                                                           at com.fasterxml.jackson.core.json.ReaderBasedJsonParser._handleOddValue(ReaderBasedJsonPars
-er.java:2051)                                                                                               at com.fasterxml.jackson.core.json.ReaderBasedJsonParser.nextToken(ReaderBasedJsonParser.jav
-a:780)                                                                                                      at com.fasterxml.jackson.databind.ObjectMapper._readTreeAndClose(ObjectMapper.java:4946)
-        at com.fasterxml.jackson.databind.ObjectMapper.readTree(ObjectMapper.java:3281)
-        at march.dev.utils.JsonUtils.cleanLlmResponse(JsonUtils.java:14)
-        at march.dev.chat.ChatSession.getLlmResponse(ChatSession.java:157)
+java.lang.RuntimeException: OpenRouter error: HTTP 402 Response: {"error":{"message":"This request r
+equires more credits, or fewer max_tokens. You requested up to 4096 tokens, but can only afford 3243. To increase, visit https://openrouter.ai/settings/credits and upgrade to a paid account","code":402,"metadata":{"provider_name":null}},"user_id":"user_35CtB02xAJdj92hrONhRxD7hgvz"}                          at march.dev.llm.OpenRouterClient.generate(OpenRouterClient.java:131)
+        at march.dev.agent.Agent.getLlmResponse(Agent.java:92)
+        at march.dev.chat.ChatSession.getLlmResponse(ChatSession.java:156)
         at march.dev.agent.Agent.chat(Agent.java:156)
-        at march.sample.App.main(App.java:86)
+        at march.sample.App.main(App.java:87)
         at org.codehaus.mojo.exec.ExecJavaMojo$1.run(ExecJavaMojo.java:279)
         at java.base/java.lang.Thread.run(Thread.java:1583)
-com.fasterxml.jackson.core.JsonParseException: Unexpected character ('`' (code 96)): expected a vali
-d value (JSON String, Number, Array, Object or token 'null', 'true' or 'false')                      at [Source: REDACTED (`StreamReadFeature.INCLUDE_SOURCE_IN_LOCATION` disabled); line: 1, column: 1]
-        at com.fasterxml.jackson.core.JsonParser._constructReadException(JsonParser.java:2660)
-        at com.fasterxml.jackson.core.base.ParserMinimalBase._reportUnexpectedChar(ParserMinimalBase
-.java:741)                                                                                                  at com.fasterxml.jackson.core.json.ReaderBasedJsonParser._handleOddValue(ReaderBasedJsonPars
-er.java:2054)                                                                                               at com.fasterxml.jackson.core.json.ReaderBasedJsonParser.nextToken(ReaderBasedJsonParser.jav
-a:780)                                                                                                      at com.fasterxml.jackson.databind.ObjectMapper._readTreeAndClose(ObjectMapper.java:4946)
-        at com.fasterxml.jackson.databind.ObjectMapper.readTree(ObjectMapper.java:3281)
-        at march.dev.utils.JsonUtils.cleanLlmResponse(JsonUtils.java:14)
-        at march.dev.chat.ChatSession.getLlmResponse(ChatSession.java:157)
+Erreur: OpenRouter error: HTTP 402 Response: {"error":{"message":"This request requires more credits
+, or fewer max_tokens. You requested up to 4096 tokens, but can only afford 3243. To increase, visit https://openrouter.ai/settings/credits and upgrade to a paid account","code":402,"metadata":{"provider_name":null}},"user_id":"user_35CtB02xAJdj92hrONhRxD7hgvz"}                                      java.lang.RuntimeException: OpenRouter error: HTTP 402 Response: {"error":{"message":"This request r
+equires more credits, or fewer max_tokens. You requested up to 4096 tokens, but can only afford 3243. To increase, visit https://openrouter.ai/settings/credits and upgrade to a paid account","code":402,"metadata":{"provider_name":null}},"user_id":"user_35CtB02xAJdj92hrONhRxD7hgvz"}                          at march.dev.llm.OpenRouterClient.generate(OpenRouterClient.java:131)
+        at march.dev.agent.Agent.getLlmResponse(Agent.java:92)
+        at march.dev.chat.ChatSession.getLlmResponse(ChatSession.java:156)
         at march.dev.agent.Agent.chat(Agent.java:156)
-        at march.sample.App.main(App.java:86)
+        at march.sample.App.main(App.java:87)
         at org.codehaus.mojo.exec.ExecJavaMojo$1.run(ExecJavaMojo.java:279)
         at java.base/java.lang.Thread.run(Thread.java:1583)
+Erreur: OpenRouter error: HTTP 402 Response: {"error":{"message":"This request requires more credits
+, or fewer max_tokens. You requested up to 4096 tokens, but can only afford 3243. To increase, visit https://openrouter.ai/settings/credits and upgrade to a paid account","code":402,"metadata":{"provider_name":null}},"user_id":"user_35CtB02xAJdj92hrONhRxD7hgvz"}                                      java.lang.RuntimeException: OpenRouter error: HTTP 402 Response: {"error":{"message":"This request r
+equires more credits, or fewer max_tokens. You requested up to 4096 tokens, but can only afford 3243. To increase, visit https://openrouter.ai/settings/credits and upgrade to a paid account","code":402,"metadata":{"provider_name":null}},"user_id":"user_35CtB02xAJdj92hrONhRxD7hgvz"}                          at march.dev.llm.OpenRouterClient.generate(OpenRouterClient.java:131)
+        at march.dev.agent.Agent.getLlmResponse(Agent.java:92)
+        at march.dev.chat.ChatSession.getLlmResponse(ChatSession.java:156)
+        at march.dev.agent.Agent.chat(Agent.java:156)
+        at march.sample.App.main(App.java:87)
+        at org.codehaus.mojo.exec.ExecJavaMojo$1.run(ExecJavaMojo.java:279)
+        at java.base/java.lang.Thread.run(Thread.java:1583)
+Erreur: OpenRouter error: HTTP 402 Response: {"error":{"message":"This request requires more credits
+, or fewer max_tokens. You requested up to 4096 tokens, but can only afford 3243. To increase, visit https://openrouter.ai/settings/credits and upgrade to a paid account","code":402,"metadata":{"provider_name":null}},"user_id":"user_35CtB02xAJdj92hrONhRxD7hgvz"}                                      java.lang.RuntimeException: OpenRouter error: HTTP 402 Response: {"error":{"message":"This request r
+equires more credits, or fewer max_tokens. You requested up to 4096 tokens, but can only afford 3243. To increase, visit https://openrouter.ai/settings/credits and upgrade to a paid account","code":402,"metadata":{"provider_name":null}},"user_id":"user_35CtB02xAJdj92hrONhRxD7hgvz"}                          at march.dev.llm.OpenRouterClient.generate(OpenRouterClient.java:131)
+        at march.dev.agent.Agent.getLlmResponse(Agent.java:92)
+        at march.dev.chat.ChatSession.getLlmResponse(ChatSession.java:156)
+        at march.dev.agent.Agent.chat(Agent.java:156)
+        at march.sample.App.main(App.java:87)
+        at org.codehaus.mojo.exec.ExecJavaMojo$1.run(ExecJavaMojo.java:279)
+        at java.base/java.lang.Thread.run(Thread.java:1583)
+Erreur: OpenRouter error: HTTP 402 Response: {"error":{"message":"This request requires more credits
+, or fewer max_tokens. You requested up to 4096 tokens, but can only afford 3243. To increase, visit https://openrouter.ai/settings/credits and upgrade to a paid account","code":402,"metadata":{"provider_name":null}},"user_id":"user_35CtB02xAJdj92hrONhRxD7hgvz"}                                      === AI Response ===
+Erreur lors de la génération de la réponse...
+
+
+=== User Request ===
+Refactor this Java method for clarity and performance: public int[] reverse(int[] a){ int n=a.length
+; for(int i=0;i<n/2;i++){int t=a[i];a[i]=a[n-i-1];a[n-i-1]=t;} return a;}                           
+java.lang.RuntimeException: OpenRouter error: HTTP 402 Response: {"error":{"message":"This request r
+equires more credits, or fewer max_tokens. You requested up to 4096 tokens, but can only afford 3243. To increase, visit https://openrouter.ai/settings/credits and upgrade to a paid account","code":402,"metadata":{"provider_name":null}},"user_id":"user_35CtB02xAJdj92hrONhRxD7hgvz"}                          at march.dev.llm.OpenRouterClient.generate(OpenRouterClient.java:131)
+        at march.dev.agent.Agent.getLlmResponse(Agent.java:92)
+        at march.dev.chat.ChatSession.getLlmResponse(ChatSession.java:156)
+        at march.dev.agent.Agent.chat(Agent.java:156)
+        at march.sample.App.main(App.java:87)
+        at org.codehaus.mojo.exec.ExecJavaMojo$1.run(ExecJavaMojo.java:279)
+        at java.base/java.lang.Thread.run(Thread.java:1583)
+Erreur: OpenRouter error: HTTP 402 Response: {"error":{"message":"This request requires more credits
+, or fewer max_tokens. You requested up to 4096 tokens, but can only afford 3243. To increase, visit https://openrouter.ai/settings/credits and upgrade to a paid account","code":402,"metadata":{"provider_name":null}},"user_id":"user_35CtB02xAJdj92hrONhRxD7hgvz"}                                      java.lang.RuntimeException: OpenRouter error: HTTP 402 Response: {"error":{"message":"This request r
+equires more credits, or fewer max_tokens. You requested up to 4096 tokens, but can only afford 3243. To increase, visit https://openrouter.ai/settings/credits and upgrade to a paid account","code":402,"metadata":{"provider_name":null}},"user_id":"user_35CtB02xAJdj92hrONhRxD7hgvz"}                          at march.dev.llm.OpenRouterClient.generate(OpenRouterClient.java:131)
+        at march.dev.agent.Agent.getLlmResponse(Agent.java:92)
+        at march.dev.chat.ChatSession.getLlmResponse(ChatSession.java:156)
+        at march.dev.agent.Agent.chat(Agent.java:156)
+        at march.sample.App.main(App.java:87)
+        at org.codehaus.mojo.exec.ExecJavaMojo$1.run(ExecJavaMojo.java:279)
+        at java.base/java.lang.Thread.run(Thread.java:1583)
+Erreur: OpenRouter error: HTTP 402 Response: {"error":{"message":"This request requires more credits
+, or fewer max_tokens. You requested up to 4096 tokens, but can only afford 3243. To increase, visit https://openrouter.ai/settings/credits and upgrade to a paid account","code":402,"metadata":{"provider_name":null}},"user_id":"user_35CtB02xAJdj92hrONhRxD7hgvz"}                                      java.lang.RuntimeException: OpenRouter error: HTTP 402 Response: {"error":{"message":"This request r
+equires more credits, or fewer max_tokens. You requested up to 4096 tokens, but can only afford 3243. To increase, visit https://openrouter.ai/settings/credits and upgrade to a paid account","code":402,"metadata":{"provider_name":null}},"user_id":"user_35CtB02xAJdj92hrONhRxD7hgvz"}                          at march.dev.llm.OpenRouterClient.generate(OpenRouterClient.java:131)
+        at march.dev.agent.Agent.getLlmResponse(Agent.java:92)
+        at march.dev.chat.ChatSession.getLlmResponse(ChatSession.java:156)
+        at march.dev.agent.Agent.chat(Agent.java:156)
+        at march.sample.App.main(App.java:87)
+        at org.codehaus.mojo.exec.ExecJavaMojo$1.run(ExecJavaMojo.java:279)
+        at java.base/java.lang.Thread.run(Thread.java:1583)
+Erreur: OpenRouter error: HTTP 402 Response: {"error":{"message":"This request requires more credits
+, or fewer max_tokens. You requested up to 4096 tokens, but can only afford 3243. To increase, visit https://openrouter.ai/settings/credits and upgrade to a paid account","code":402,"metadata":{"provider_name":null}},"user_id":"user_35CtB02xAJdj92hrONhRxD7hgvz"}                                      java.lang.RuntimeException: OpenRouter error: HTTP 402 Response: {"error":{"message":"This request r
+equires more credits, or fewer max_tokens. You requested up to 4096 tokens, but can only afford 3243. To increase, visit https://openrouter.ai/settings/credits and upgrade to a paid account","code":402,"metadata":{"provider_name":null}},"user_id":"user_35CtB02xAJdj92hrONhRxD7hgvz"}                          at march.dev.llm.OpenRouterClient.generate(OpenRouterClient.java:131)
+        at march.dev.agent.Agent.getLlmResponse(Agent.java:92)
+        at march.dev.chat.ChatSession.getLlmResponse(ChatSession.java:156)
+        at march.dev.agent.Agent.chat(Agent.java:156)
+        at march.sample.App.main(App.java:87)
+        at org.codehaus.mojo.exec.ExecJavaMojo$1.run(ExecJavaMojo.java:279)
+        at java.base/java.lang.Thread.run(Thread.java:1583)
+Erreur: OpenRouter error: HTTP 402 Response: {"error":{"message":"This request requires more credits
+, or fewer max_tokens. You requested up to 4096 tokens, but can only afford 3243. To increase, visit https://openrouter.ai/settings/credits and upgrade to a paid account","code":402,"metadata":{"provider_name":null}},"user_id":"user_35CtB02xAJdj92hrONhRxD7hgvz"}                                      === AI Response ===
+Erreur lors de la génération de la réponse...
+
+
+=== User Request ===
+Extract entities and dates from: 'Schedule a meeting with Dr. Smith on March 15th, 2026 at 3pm, and 
+send follow up.'                                                                                    
+java.lang.RuntimeException: OpenRouter error: HTTP 402 Response: {"error":{"message":"This request r
+equires more credits, or fewer max_tokens. You requested up to 4096 tokens, but can only afford 3243. To increase, visit https://openrouter.ai/settings/credits and upgrade to a paid account","code":402,"metadata":{"provider_name":null}},"user_id":"user_35CtB02xAJdj92hrONhRxD7hgvz"}                          at march.dev.llm.OpenRouterClient.generate(OpenRouterClient.java:131)
+        at march.dev.agent.Agent.getLlmResponse(Agent.java:92)
+        at march.dev.chat.ChatSession.getLlmResponse(ChatSession.java:156)
+        at march.dev.agent.Agent.chat(Agent.java:156)
+        at march.sample.App.main(App.java:87)
+        at org.codehaus.mojo.exec.ExecJavaMojo$1.run(ExecJavaMojo.java:279)
+        at java.base/java.lang.Thread.run(Thread.java:1583)
+Erreur: OpenRouter error: HTTP 402 Response: {"error":{"message":"This request requires more credits
+, or fewer max_tokens. You requested up to 4096 tokens, but can only afford 3243. To increase, visit https://openrouter.ai/settings/credits and upgrade to a paid account","code":402,"metadata":{"provider_name":null}},"user_id":"user_35CtB02xAJdj92hrONhRxD7hgvz"}                                      java.lang.RuntimeException: OpenRouter error: HTTP 402 Response: {"error":{"message":"This request r
+equires more credits, or fewer max_tokens. You requested up to 4096 tokens, but can only afford 3243. To increase, visit https://openrouter.ai/settings/credits and upgrade to a paid account","code":402,"metadata":{"provider_name":null}},"user_id":"user_35CtB02xAJdj92hrONhRxD7hgvz"}                          at march.dev.llm.OpenRouterClient.generate(OpenRouterClient.java:131)
+        at march.dev.agent.Agent.getLlmResponse(Agent.java:92)
+        at march.dev.chat.ChatSession.getLlmResponse(ChatSession.java:156)
+        at march.dev.agent.Agent.chat(Agent.java:156)
+        at march.sample.App.main(App.java:87)
+        at org.codehaus.mojo.exec.ExecJavaMojo$1.run(ExecJavaMojo.java:279)
+        at java.base/java.lang.Thread.run(Thread.java:1583)
+Erreur: OpenRouter error: HTTP 402 Response: {"error":{"message":"This request requires more credits
+, or fewer max_tokens. You requested up to 4096 tokens, but can only afford 3243. To increase, visit https://openrouter.ai/settings/credits and upgrade to a paid account","code":402,"metadata":{"provider_name":null}},"user_id":"user_35CtB02xAJdj92hrONhRxD7hgvz"}                                      java.lang.RuntimeException: OpenRouter error: HTTP 402 Response: {"error":{"message":"This request r
+equires more credits, or fewer max_tokens. You requested up to 4096 tokens, but can only afford 3243. To increase, visit https://openrouter.ai/settings/credits and upgrade to a paid account","code":402,"metadata":{"provider_name":null}},"user_id":"user_35CtB02xAJdj92hrONhRxD7hgvz"}                          at march.dev.llm.OpenRouterClient.generate(OpenRouterClient.java:131)
+        at march.dev.agent.Agent.getLlmResponse(Agent.java:92)
+        at march.dev.chat.ChatSession.getLlmResponse(ChatSession.java:156)
+        at march.dev.agent.Agent.chat(Agent.java:156)
+        at march.sample.App.main(App.java:87)
+        at org.codehaus.mojo.exec.ExecJavaMojo$1.run(ExecJavaMojo.java:279)
+        at java.base/java.lang.Thread.run(Thread.java:1583)
+Erreur: OpenRouter error: HTTP 402 Response: {"error":{"message":"This request requires more credits
+, or fewer max_tokens. You requested up to 4096 tokens, but can only afford 3243. To increase, visit https://openrouter.ai/settings/credits and upgrade to a paid account","code":402,"metadata":{"provider_name":null}},"user_id":"user_35CtB02xAJdj92hrONhRxD7hgvz"}                                      java.lang.RuntimeException: OpenRouter error: HTTP 402 Response: {"error":{"message":"This request r
+equires more credits, or fewer max_tokens. You requested up to 4096 tokens, but can only afford 3243. To increase, visit https://openrouter.ai/settings/credits and upgrade to a paid account","code":402,"metadata":{"provider_name":null}},"user_id":"user_35CtB02xAJdj92hrONhRxD7hgvz"}                          at march.dev.llm.OpenRouterClient.generate(OpenRouterClient.java:131)
+        at march.dev.agent.Agent.getLlmResponse(Agent.java:92)
+        at march.dev.chat.ChatSession.getLlmResponse(ChatSession.java:156)
+        at march.dev.agent.Agent.chat(Agent.java:156)
+        at march.sample.App.main(App.java:87)
+        at org.codehaus.mojo.exec.ExecJavaMojo$1.run(ExecJavaMojo.java:279)
+        at java.base/java.lang.Thread.run(Thread.java:1583)
+Erreur: OpenRouter error: HTTP 402 Response: {"error":{"message":"This request requires more credits
+, or fewer max_tokens. You requested up to 4096 tokens, but can only afford 3243. To increase, visit https://openrouter.ai/settings/credits and upgrade to a paid account","code":402,"metadata":{"provider_name":null}},"user_id":"user_35CtB02xAJdj92hrONhRxD7hgvz"}                                      === AI Response ===
+Erreur lors de la génération de la réponse...
+
+
+=== User Request ===
+Given a CSV content with columns (name,age,salary) with 1000 rows (simulate), compute median age and
+ average salary per decade bucket and return as JSON.                                               
+java.lang.RuntimeException: OpenRouter error: HTTP 402 Response: {"error":{"message":"This request r
+equires more credits, or fewer max_tokens. You requested up to 4096 tokens, but can only afford 3243. To increase, visit https://openrouter.ai/settings/credits and upgrade to a paid account","code":402,"metadata":{"provider_name":null}},"user_id":"user_35CtB02xAJdj92hrONhRxD7hgvz"}                          at march.dev.llm.OpenRouterClient.generate(OpenRouterClient.java:131)
+        at march.dev.agent.Agent.getLlmResponse(Agent.java:92)
+        at march.dev.chat.ChatSession.getLlmResponse(ChatSession.java:156)
+        at march.dev.agent.Agent.chat(Agent.java:156)
+        at march.sample.App.main(App.java:87)
+        at org.codehaus.mojo.exec.ExecJavaMojo$1.run(ExecJavaMojo.java:279)
+        at java.base/java.lang.Thread.run(Thread.java:1583)
+Erreur: OpenRouter error: HTTP 402 Response: {"error":{"message":"This request requires more credits
+, or fewer max_tokens. You requested up to 4096 tokens, but can only afford 3243. To increase, visit https://openrouter.ai/settings/credits and upgrade to a paid account","code":402,"metadata":{"provider_name":null}},"user_id":"user_35CtB02xAJdj92hrONhRxD7hgvz"}                                      java.lang.RuntimeException: OpenRouter error: HTTP 402 Response: {"error":{"message":"This request r
+equires more credits, or fewer max_tokens. You requested up to 4096 tokens, but can only afford 3243. To increase, visit https://openrouter.ai/settings/credits and upgrade to a paid account","code":402,"metadata":{"provider_name":null}},"user_id":"user_35CtB02xAJdj92hrONhRxD7hgvz"}                          at march.dev.llm.OpenRouterClient.generate(OpenRouterClient.java:131)
+        at march.dev.agent.Agent.getLlmResponse(Agent.java:92)
+        at march.dev.chat.ChatSession.getLlmResponse(ChatSession.java:156)
+        at march.dev.agent.Agent.chat(Agent.java:156)
+        at march.sample.App.main(App.java:87)
+        at org.codehaus.mojo.exec.ExecJavaMojo$1.run(ExecJavaMojo.java:279)
+        at java.base/java.lang.Thread.run(Thread.java:1583)
+Erreur: OpenRouter error: HTTP 402 Response: {"error":{"message":"This request requires more credits
+, or fewer max_tokens. You requested up to 4096 tokens, but can only afford 3243. To increase, visit https://openrouter.ai/settings/credits and upgrade to a paid account","code":402,"metadata":{"provider_name":null}},"user_id":"user_35CtB02xAJdj92hrONhRxD7hgvz"}                                      java.lang.RuntimeException: OpenRouter error: HTTP 402 Response: {"error":{"message":"This request r
+equires more credits, or fewer max_tokens. You requested up to 4096 tokens, but can only afford 3243. To increase, visit https://openrouter.ai/settings/credits and upgrade to a paid account","code":402,"metadata":{"provider_name":null}},"user_id":"user_35CtB02xAJdj92hrONhRxD7hgvz"}                          at march.dev.llm.OpenRouterClient.generate(OpenRouterClient.java:131)
+        at march.dev.agent.Agent.getLlmResponse(Agent.java:92)
+        at march.dev.chat.ChatSession.getLlmResponse(ChatSession.java:156)
+        at march.dev.agent.Agent.chat(Agent.java:156)
+        at march.sample.App.main(App.java:87)
+        at org.codehaus.mojo.exec.ExecJavaMojo$1.run(ExecJavaMojo.java:279)
+        at java.base/java.lang.Thread.run(Thread.java:1583)
+Erreur: OpenRouter error: HTTP 402 Response: {"error":{"message":"This request requires more credits
+, or fewer max_tokens. You requested up to 4096 tokens, but can only afford 3243. To increase, visit https://openrouter.ai/settings/credits and upgrade to a paid account","code":402,"metadata":{"provider_name":null}},"user_id":"user_35CtB02xAJdj92hrONhRxD7hgvz"}                                      java.lang.RuntimeException: OpenRouter error: HTTP 402 Response: {"error":{"message":"This request r
+equires more credits, or fewer max_tokens. You requested up to 4096 tokens, but can only afford 3243. To increase, visit https://openrouter.ai/settings/credits and upgrade to a paid account","code":402,"metadata":{"provider_name":null}},"user_id":"user_35CtB02xAJdj92hrONhRxD7hgvz"}                          at march.dev.llm.OpenRouterClient.generate(OpenRouterClient.java:131)
+        at march.dev.agent.Agent.getLlmResponse(Agent.java:92)
+        at march.dev.chat.ChatSession.getLlmResponse(ChatSession.java:156)
+        at march.dev.agent.Agent.chat(Agent.java:156)
+        at march.sample.App.main(App.java:87)
+        at org.codehaus.mojo.exec.ExecJavaMojo$1.run(ExecJavaMojo.java:279)
+        at java.base/java.lang.Thread.run(Thread.java:1583)
+Erreur: OpenRouter error: HTTP 402 Response: {"error":{"message":"This request requires more credits
+, or fewer max_tokens. You requested up to 4096 tokens, but can only afford 3243. To increase, visit https://openrouter.ai/settings/credits and upgrade to a paid account","code":402,"metadata":{"provider_name":null}},"user_id":"user_35CtB02xAJdj92hrONhRxD7hgvz"}                                      === AI Response ===
+Erreur lors de la génération de la réponse...
+
+
+=== User Request ===
+Generate a 300-word technical report about scalable vector search architectures, include headers and
+ a short conclusion.                                                                                
+java.lang.RuntimeException: OpenRouter error: HTTP 402 Response: {"error":{"message":"This request r
+equires more credits, or fewer max_tokens. You requested up to 4096 tokens, but can only afford 3243. To increase, visit https://openrouter.ai/settings/credits and upgrade to a paid account","code":402,"metadata":{"provider_name":null}},"user_id":"user_35CtB02xAJdj92hrONhRxD7hgvz"}                          at march.dev.llm.OpenRouterClient.generate(OpenRouterClient.java:131)
+        at march.dev.agent.Agent.getLlmResponse(Agent.java:92)
+        at march.dev.chat.ChatSession.getLlmResponse(ChatSession.java:156)
+        at march.dev.agent.Agent.chat(Agent.java:156)
+        at march.sample.App.main(App.java:87)
+        at org.codehaus.mojo.exec.ExecJavaMojo$1.run(ExecJavaMojo.java:279)
+        at java.base/java.lang.Thread.run(Thread.java:1583)
+Erreur: OpenRouter error: HTTP 402 Response: {"error":{"message":"This request requires more credits
+, or fewer max_tokens. You requested up to 4096 tokens, but can only afford 3243. To increase, visit https://openrouter.ai/settings/credits and upgrade to a paid account","code":402,"metadata":{"provider_name":null}},"user_id":"user_35CtB02xAJdj92hrONhRxD7hgvz"}                                      java.lang.RuntimeException: OpenRouter error: HTTP 402 Response: {"error":{"message":"This request r
+equires more credits, or fewer max_tokens. You requested up to 4096 tokens, but can only afford 3243. To increase, visit https://openrouter.ai/settings/credits and upgrade to a paid account","code":402,"metadata":{"provider_name":null}},"user_id":"user_35CtB02xAJdj92hrONhRxD7hgvz"}                          at march.dev.llm.OpenRouterClient.generate(OpenRouterClient.java:131)
+        at march.dev.agent.Agent.getLlmResponse(Agent.java:92)
+        at march.dev.chat.ChatSession.getLlmResponse(ChatSession.java:156)
+        at march.dev.agent.Agent.chat(Agent.java:156)
+        at march.sample.App.main(App.java:87)
+        at org.codehaus.mojo.exec.ExecJavaMojo$1.run(ExecJavaMojo.java:279)
+        at java.base/java.lang.Thread.run(Thread.java:1583)
+Erreur: OpenRouter error: HTTP 402 Response: {"error":{"message":"This request requires more credits
+, or fewer max_tokens. You requested up to 4096 tokens, but can only afford 3243. To increase, visit https://openrouter.ai/settings/credits and upgrade to a paid account","code":402,"metadata":{"provider_name":null}},"user_id":"user_35CtB02xAJdj92hrONhRxD7hgvz"}                                      java.lang.RuntimeException: OpenRouter error: HTTP 402 Response: {"error":{"message":"This request r
+equires more credits, or fewer max_tokens. You requested up to 4096 tokens, but can only afford 3243. To increase, visit https://openrouter.ai/settings/credits and upgrade to a paid account","code":402,"metadata":{"provider_name":null}},"user_id":"user_35CtB02xAJdj92hrONhRxD7hgvz"}                          at march.dev.llm.OpenRouterClient.generate(OpenRouterClient.java:131)
+        at march.dev.agent.Agent.getLlmResponse(Agent.java:92)
+        at march.dev.chat.ChatSession.getLlmResponse(ChatSession.java:156)
+        at march.dev.agent.Agent.chat(Agent.java:156)
+        at march.sample.App.main(App.java:87)
+        at org.codehaus.mojo.exec.ExecJavaMojo$1.run(ExecJavaMojo.java:279)
+        at java.base/java.lang.Thread.run(Thread.java:1583)
+Erreur: OpenRouter error: HTTP 402 Response: {"error":{"message":"This request requires more credits
+, or fewer max_tokens. You requested up to 4096 tokens, but can only afford 3243. To increase, visit https://openrouter.ai/settings/credits and upgrade to a paid account","code":402,"metadata":{"provider_name":null}},"user_id":"user_35CtB02xAJdj92hrONhRxD7hgvz"}                                      java.lang.RuntimeException: OpenRouter error: HTTP 402 Response: {"error":{"message":"This request r
+equires more credits, or fewer max_tokens. You requested up to 4096 tokens, but can only afford 3243. To increase, visit https://openrouter.ai/settings/credits and upgrade to a paid account","code":402,"metadata":{"provider_name":null}},"user_id":"user_35CtB02xAJdj92hrONhRxD7hgvz"}                          at march.dev.llm.OpenRouterClient.generate(OpenRouterClient.java:131)
+        at march.dev.agent.Agent.getLlmResponse(Agent.java:92)
+        at march.dev.chat.ChatSession.getLlmResponse(ChatSession.java:156)
+        at march.dev.agent.Agent.chat(Agent.java:156)
+        at march.sample.App.main(App.java:87)
+        at org.codehaus.mojo.exec.ExecJavaMojo$1.run(ExecJavaMojo.java:279)
+        at java.base/java.lang.Thread.run(Thread.java:1583)
+Erreur: OpenRouter error: HTTP 402 Response: {"error":{"message":"This request requires more credits
+, or fewer max_tokens. You requested up to 4096 tokens, but can only afford 3243. To increase, visit https://openrouter.ai/settings/credits and upgrade to a paid account","code":402,"metadata":{"provider_name":null}},"user_id":"user_35CtB02xAJdj92hrONhRxD7hgvz"}                                      === AI Response ===
+Erreur lors de la génération de la réponse...
+
+
+=== User Request ===
+Compute the shortest route visiting these coordinates (approx): (48.8566,2.3522),(51.5074,-0.1278),(
+40.7128,-74.0060) and explain the reasoning.                                                        
+java.lang.RuntimeException: OpenRouter error: HTTP 402 Response: {"error":{"message":"This request r
+equires more credits, or fewer max_tokens. You requested up to 4096 tokens, but can only afford 3243. To increase, visit https://openrouter.ai/settings/credits and upgrade to a paid account","code":402,"metadata":{"provider_name":null}},"user_id":"user_35CtB02xAJdj92hrONhRxD7hgvz"}                          at march.dev.llm.OpenRouterClient.generate(OpenRouterClient.java:131)
+        at march.dev.agent.Agent.getLlmResponse(Agent.java:92)
+        at march.dev.chat.ChatSession.getLlmResponse(ChatSession.java:156)
+        at march.dev.agent.Agent.chat(Agent.java:156)
+        at march.sample.App.main(App.java:87)
+        at org.codehaus.mojo.exec.ExecJavaMojo$1.run(ExecJavaMojo.java:279)
+        at java.base/java.lang.Thread.run(Thread.java:1583)
+Erreur: OpenRouter error: HTTP 402 Response: {"error":{"message":"This request requires more credits
+, or fewer max_tokens. You requested up to 4096 tokens, but can only afford 3243. To increase, visit https://openrouter.ai/settings/credits and upgrade to a paid account","code":402,"metadata":{"provider_name":null}},"user_id":"user_35CtB02xAJdj92hrONhRxD7hgvz"}                                      java.lang.RuntimeException: OpenRouter error: HTTP 402 Response: {"error":{"message":"This request r
+equires more credits, or fewer max_tokens. You requested up to 4096 tokens, but can only afford 3243. To increase, visit https://openrouter.ai/settings/credits and upgrade to a paid account","code":402,"metadata":{"provider_name":null}},"user_id":"user_35CtB02xAJdj92hrONhRxD7hgvz"}                          at march.dev.llm.OpenRouterClient.generate(OpenRouterClient.java:131)
+        at march.dev.agent.Agent.getLlmResponse(Agent.java:92)
+        at march.dev.chat.ChatSession.getLlmResponse(ChatSession.java:156)
+        at march.dev.agent.Agent.chat(Agent.java:156)
+        at march.sample.App.main(App.java:87)
+        at org.codehaus.mojo.exec.ExecJavaMojo$1.run(ExecJavaMojo.java:279)
+        at java.base/java.lang.Thread.run(Thread.java:1583)
+Erreur: OpenRouter error: HTTP 402 Response: {"error":{"message":"This request requires more credits
+, or fewer max_tokens. You requested up to 4096 tokens, but can only afford 3243. To increase, visit https://openrouter.ai/settings/credits and upgrade to a paid account","code":402,"metadata":{"provider_name":null}},"user_id":"user_35CtB02xAJdj92hrONhRxD7hgvz"}                                      java.lang.RuntimeException: OpenRouter error: HTTP 402 Response: {"error":{"message":"This request r
+equires more credits, or fewer max_tokens. You requested up to 4096 tokens, but can only afford 3243. To increase, visit https://openrouter.ai/settings/credits and upgrade to a paid account","code":402,"metadata":{"provider_name":null}},"user_id":"user_35CtB02xAJdj92hrONhRxD7hgvz"}                          at march.dev.llm.OpenRouterClient.generate(OpenRouterClient.java:131)
+        at march.dev.agent.Agent.getLlmResponse(Agent.java:92)
+        at march.dev.chat.ChatSession.getLlmResponse(ChatSession.java:156)
+        at march.dev.agent.Agent.chat(Agent.java:156)
+        at march.sample.App.main(App.java:87)
+        at org.codehaus.mojo.exec.ExecJavaMojo$1.run(ExecJavaMojo.java:279)
+        at java.base/java.lang.Thread.run(Thread.java:1583)
+Erreur: OpenRouter error: HTTP 402 Response: {"error":{"message":"This request requires more credits
+, or fewer max_tokens. You requested up to 4096 tokens, but can only afford 3243. To increase, visit https://openrouter.ai/settings/credits and upgrade to a paid account","code":402,"metadata":{"provider_name":null}},"user_id":"user_35CtB02xAJdj92hrONhRxD7hgvz"}                                      java.lang.RuntimeException: OpenRouter error: HTTP 402 Response: {"error":{"message":"This request r
+equires more credits, or fewer max_tokens. You requested up to 4096 tokens, but can only afford 3243. To increase, visit https://openrouter.ai/settings/credits and upgrade to a paid account","code":402,"metadata":{"provider_name":null}},"user_id":"user_35CtB02xAJdj92hrONhRxD7hgvz"}                          at march.dev.llm.OpenRouterClient.generate(OpenRouterClient.java:131)
+        at march.dev.agent.Agent.getLlmResponse(Agent.java:92)
+        at march.dev.chat.ChatSession.getLlmResponse(ChatSession.java:156)
+        at march.dev.agent.Agent.chat(Agent.java:156)
+        at march.sample.App.main(App.java:87)
+        at org.codehaus.mojo.exec.ExecJavaMojo$1.run(ExecJavaMojo.java:279)
+        at java.base/java.lang.Thread.run(Thread.java:1583)
+Erreur: OpenRouter error: HTTP 402 Response: {"error":{"message":"This request requires more credits
+, or fewer max_tokens. You requested up to 4096 tokens, but can only afford 3243. To increase, visit https://openrouter.ai/settings/credits and upgrade to a paid account","code":402,"metadata":{"provider_name":null}},"user_id":"user_35CtB02xAJdj92hrONhRxD7hgvz"}                                      === AI Response ===
+Erreur lors de la génération de la réponse...
+
+
+=== User Request ===
+Given text: 'The battery lasts 10h under light use', output sentiment and a 2-sentence product blurb
+ targeted at engineers.                                                                             
+java.lang.RuntimeException: OpenRouter error: HTTP 402 Response: {"error":{"message":"This request r
+equires more credits, or fewer max_tokens. You requested up to 4096 tokens, but can only afford 3243. To increase, visit https://openrouter.ai/settings/credits and upgrade to a paid account","code":402,"metadata":{"provider_name":null}},"user_id":"user_35CtB02xAJdj92hrONhRxD7hgvz"}                          at march.dev.llm.OpenRouterClient.generate(OpenRouterClient.java:131)
+        at march.dev.agent.Agent.getLlmResponse(Agent.java:92)
+        at march.dev.chat.ChatSession.getLlmResponse(ChatSession.java:156)
+        at march.dev.agent.Agent.chat(Agent.java:156)
+        at march.sample.App.main(App.java:87)
+        at org.codehaus.mojo.exec.ExecJavaMojo$1.run(ExecJavaMojo.java:279)
+        at java.base/java.lang.Thread.run(Thread.java:1583)
+Erreur: OpenRouter error: HTTP 402 Response: {"error":{"message":"This request requires more credits
+, or fewer max_tokens. You requested up to 4096 tokens, but can only afford 3243. To increase, visit https://openrouter.ai/settings/credits and upgrade to a paid account","code":402,"metadata":{"provider_name":null}},"user_id":"user_35CtB02xAJdj92hrONhRxD7hgvz"}                                      java.lang.RuntimeException: OpenRouter error: HTTP 402 Response: {"error":{"message":"This request r
+equires more credits, or fewer max_tokens. You requested up to 4096 tokens, but can only afford 3243. To increase, visit https://openrouter.ai/settings/credits and upgrade to a paid account","code":402,"metadata":{"provider_name":null}},"user_id":"user_35CtB02xAJdj92hrONhRxD7hgvz"}                          at march.dev.llm.OpenRouterClient.generate(OpenRouterClient.java:131)
+        at march.dev.agent.Agent.getLlmResponse(Agent.java:92)
+        at march.dev.chat.ChatSession.getLlmResponse(ChatSession.java:156)
+        at march.dev.agent.Agent.chat(Agent.java:156)
+        at march.sample.App.main(App.java:87)
+        at org.codehaus.mojo.exec.ExecJavaMojo$1.run(ExecJavaMojo.java:279)
+        at java.base/java.lang.Thread.run(Thread.java:1583)
+Erreur: OpenRouter error: HTTP 402 Response: {"error":{"message":"This request requires more credits
+, or fewer max_tokens. You requested up to 4096 tokens, but can only afford 3243. To increase, visit https://openrouter.ai/settings/credits and upgrade to a paid account","code":402,"metadata":{"provider_name":null}},"user_id":"user_35CtB02xAJdj92hrONhRxD7hgvz"}                                      java.lang.RuntimeException: OpenRouter error: HTTP 402 Response: {"error":{"message":"This request r
+equires more credits, or fewer max_tokens. You requested up to 4096 tokens, but can only afford 3243. To increase, visit https://openrouter.ai/settings/credits and upgrade to a paid account","code":402,"metadata":{"provider_name":null}},"user_id":"user_35CtB02xAJdj92hrONhRxD7hgvz"}                          at march.dev.llm.OpenRouterClient.generate(OpenRouterClient.java:131)
+        at march.dev.agent.Agent.getLlmResponse(Agent.java:92)
+        at march.dev.chat.ChatSession.getLlmResponse(ChatSession.java:156)
+        at march.dev.agent.Agent.chat(Agent.java:156)
+        at march.sample.App.main(App.java:87)
+        at org.codehaus.mojo.exec.ExecJavaMojo$1.run(ExecJavaMojo.java:279)
+        at java.base/java.lang.Thread.run(Thread.java:1583)
+Erreur: OpenRouter error: HTTP 402 Response: {"error":{"message":"This request requires more credits
+, or fewer max_tokens. You requested up to 4096 tokens, but can only afford 3243. To increase, visit https://openrouter.ai/settings/credits and upgrade to a paid account","code":402,"metadata":{"provider_name":null}},"user_id":"user_35CtB02xAJdj92hrONhRxD7hgvz"}                                      java.lang.RuntimeException: OpenRouter error: HTTP 402 Response: {"error":{"message":"This request r
+equires more credits, or fewer max_tokens. You requested up to 4096 tokens, but can only afford 3243. To increase, visit https://openrouter.ai/settings/credits and upgrade to a paid account","code":402,"metadata":{"provider_name":null}},"user_id":"user_35CtB02xAJdj92hrONhRxD7hgvz"}                          at march.dev.llm.OpenRouterClient.generate(OpenRouterClient.java:131)
+        at march.dev.agent.Agent.getLlmResponse(Agent.java:92)
+        at march.dev.chat.ChatSession.getLlmResponse(ChatSession.java:156)
+        at march.dev.agent.Agent.chat(Agent.java:156)
+        at march.sample.App.main(App.java:87)
+        at org.codehaus.mojo.exec.ExecJavaMojo$1.run(ExecJavaMojo.java:279)
+        at java.base/java.lang.Thread.run(Thread.java:1583)
+Erreur: OpenRouter error: HTTP 402 Response: {"error":{"message":"This request requires more credits
+, or fewer max_tokens. You requested up to 4096 tokens, but can only afford 3243. To increase, visit https://openrouter.ai/settings/credits and upgrade to a paid account","code":402,"metadata":{"provider_name":null}},"user_id":"user_35CtB02xAJdj92hrONhRxD7hgvz"}                                      === AI Response ===
+Erreur lors de la génération de la réponse...
+
+
+=== User Request ===
+Run a simulated heavy numeric task: multiply two 10x10 matrices filled with 1..100 and return the re
+sulting matrix in CSV format.                                                                       
+java.lang.RuntimeException: OpenRouter error: HTTP 402 Response: {"error":{"message":"This request r
+equires more credits, or fewer max_tokens. You requested up to 4096 tokens, but can only afford 3243. To increase, visit https://openrouter.ai/settings/credits and upgrade to a paid account","code":402,"metadata":{"provider_name":null}},"user_id":"user_35CtB02xAJdj92hrONhRxD7hgvz"}                          at march.dev.llm.OpenRouterClient.generate(OpenRouterClient.java:131)
+        at march.dev.agent.Agent.getLlmResponse(Agent.java:92)
+        at march.dev.chat.ChatSession.getLlmResponse(ChatSession.java:156)
+        at march.dev.agent.Agent.chat(Agent.java:156)
+        at march.sample.App.main(App.java:87)
+        at org.codehaus.mojo.exec.ExecJavaMojo$1.run(ExecJavaMojo.java:279)
+        at java.base/java.lang.Thread.run(Thread.java:1583)
+Erreur: OpenRouter error: HTTP 402 Response: {"error":{"message":"This request requires more credits
+, or fewer max_tokens. You requested up to 4096 tokens, but can only afford 3243. To increase, visit https://openrouter.ai/settings/credits and upgrade to a paid account","code":402,"metadata":{"provider_name":null}},"user_id":"user_35CtB02xAJdj92hrONhRxD7hgvz"}                                      java.lang.RuntimeException: OpenRouter error: HTTP 402 Response: {"error":{"message":"This request r
+equires more credits, or fewer max_tokens. You requested up to 4096 tokens, but can only afford 3243. To increase, visit https://openrouter.ai/settings/credits and upgrade to a paid account","code":402,"metadata":{"provider_name":null}},"user_id":"user_35CtB02xAJdj92hrONhRxD7hgvz"}                          at march.dev.llm.OpenRouterClient.generate(OpenRouterClient.java:131)
+        at march.dev.agent.Agent.getLlmResponse(Agent.java:92)
+        at march.dev.chat.ChatSession.getLlmResponse(ChatSession.java:156)
+        at march.dev.agent.Agent.chat(Agent.java:156)
+        at march.sample.App.main(App.java:87)
+        at org.codehaus.mojo.exec.ExecJavaMojo$1.run(ExecJavaMojo.java:279)
+        at java.base/java.lang.Thread.run(Thread.java:1583)
+Erreur: OpenRouter error: HTTP 402 Response: {"error":{"message":"This request requires more credits
+, or fewer max_tokens. You requested up to 4096 tokens, but can only afford 3243. To increase, visit https://openrouter.ai/settings/credits and upgrade to a paid account","code":402,"metadata":{"provider_name":null}},"user_id":"user_35CtB02xAJdj92hrONhRxD7hgvz"}                                      java.lang.RuntimeException: OpenRouter error: HTTP 402 Response: {"error":{"message":"This request r
+equires more credits, or fewer max_tokens. You requested up to 4096 tokens, but can only afford 3243. To increase, visit https://openrouter.ai/settings/credits and upgrade to a paid account","code":402,"metadata":{"provider_name":null}},"user_id":"user_35CtB02xAJdj92hrONhRxD7hgvz"}                          at march.dev.llm.OpenRouterClient.generate(OpenRouterClient.java:131)
+        at march.dev.agent.Agent.getLlmResponse(Agent.java:92)
+        at march.dev.chat.ChatSession.getLlmResponse(ChatSession.java:156)
+        at march.dev.agent.Agent.chat(Agent.java:156)
+        at march.sample.App.main(App.java:87)
+        at org.codehaus.mojo.exec.ExecJavaMojo$1.run(ExecJavaMojo.java:279)
+        at java.base/java.lang.Thread.run(Thread.java:1583)
+Erreur: OpenRouter error: HTTP 402 Response: {"error":{"message":"This request requires more credits
+, or fewer max_tokens. You requested up to 4096 tokens, but can only afford 3243. To increase, visit https://openrouter.ai/settings/credits and upgrade to a paid account","code":402,"metadata":{"provider_name":null}},"user_id":"user_35CtB02xAJdj92hrONhRxD7hgvz"}                                      

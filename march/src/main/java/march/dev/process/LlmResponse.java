@@ -119,16 +119,7 @@ public class LlmResponse implements Response {
                 Object argValue = arguments.get(paramName);
                 com.fasterxml.jackson.databind.JavaType targetType = objectMapper.constructType(paramType);
 
-                // Try direct conversion first
-                try {
-                    Object typedArg = objectMapper.convertValue(argValue, targetType);
-                    orderedArgs.add(typedArg);
-                    continue;
-                } catch (Exception ex) {
-                    // fallback to more permissive parsing below
-                }
-
-                // Handle stringified JSON arrays or comma-separated lists for array targets
+                // Handle array targets first (avoid Jackson trying to deserialize a comma-separated string into an array)
                 if (targetType.isArrayType()) {
                     Class<?> compRaw = targetType.getContentType().getRawClass();
                     Class<?> compBox = boxPrimitive(compRaw);
@@ -136,7 +127,7 @@ public class LlmResponse implements Response {
                     // If argValue is a String, try parsing JSON array or comma-separated values
                     if (argValue instanceof String) {
                         String s = ((String) argValue).trim();
-                        // try JSON array first
+                        // try JSON array first (e.g. "[1,2,3]")
                         try {
                             java.util.List<?> list = objectMapper.readValue(s,
                                     objectMapper.getTypeFactory().constructCollectionType(java.util.List.class, compBox));
@@ -144,12 +135,13 @@ public class LlmResponse implements Response {
                             orderedArgs.add(arr);
                             continue;
                         } catch (Exception ex) {
-                            // not JSON array, try comma-separated
+                            // not a JSON array; try comma-separated values (e.g. "1,2,3")
                             try {
                                 String[] parts = s.split(",");
                                 java.util.List<Object> vals = new java.util.ArrayList<>();
                                 for (String p : parts) {
                                     String t = p.trim();
+                                    if (t.isEmpty()) continue;
                                     Object v = parsePrimitiveOrString(t, compRaw);
                                     vals.add(v);
                                 }
@@ -182,6 +174,15 @@ public class LlmResponse implements Response {
                         orderedArgs.add(null);
                         continue;
                     }
+                }
+
+                // Non-array fallback: try direct conversion first (for non-array types)
+                try {
+                    Object typedArg = objectMapper.convertValue(argValue, targetType);
+                    orderedArgs.add(typedArg);
+                    continue;
+                } catch (Exception ex) {
+                    // fallback to string coercion below
                 }
 
                 // Non-array fallback: try to coerce primitive in string form

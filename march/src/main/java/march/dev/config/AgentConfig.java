@@ -8,6 +8,12 @@ public class AgentConfig {
     private int maxHistorySize = 10000;
     private int maxActiveSummaries = 5;
     private int tokenBudget = 4000;
+    // LLM client network and retry settings (seconds / milliseconds)
+    private int connectTimeoutSec = 15;
+    private int readTimeoutSec = 60;
+    private int writeTimeoutSec = 60;
+    private int callTimeoutSec = 120;
+    private long llmInitialBackoffMs = 500;
     private String provider;
     private Map<String, String> providerConfig;
     private int toolTopN = 6;
@@ -110,6 +116,46 @@ public class AgentConfig {
 
     public int getMaxHistorySize() {
         return maxHistorySize;
+    }
+
+    public int getConnectTimeoutSec() {
+        return connectTimeoutSec;
+    }
+
+    public void setConnectTimeoutSec(int connectTimeoutSec) {
+        this.connectTimeoutSec = connectTimeoutSec;
+    }
+
+    public int getReadTimeoutSec() {
+        return readTimeoutSec;
+    }
+
+    public void setReadTimeoutSec(int readTimeoutSec) {
+        this.readTimeoutSec = readTimeoutSec;
+    }
+
+    public int getWriteTimeoutSec() {
+        return writeTimeoutSec;
+    }
+
+    public void setWriteTimeoutSec(int writeTimeoutSec) {
+        this.writeTimeoutSec = writeTimeoutSec;
+    }
+
+    public int getCallTimeoutSec() {
+        return callTimeoutSec;
+    }
+
+    public void setCallTimeoutSec(int callTimeoutSec) {
+        this.callTimeoutSec = callTimeoutSec;
+    }
+
+    public long getLlmInitialBackoffMs() {
+        return llmInitialBackoffMs;
+    }
+
+    public void setLlmInitialBackoffMs(long llmInitialBackoffMs) {
+        this.llmInitialBackoffMs = llmInitialBackoffMs;
     }
 
     public void setMaxHistorySize(int maxHistorySize) {

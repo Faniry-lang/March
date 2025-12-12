@@ -7,6 +7,9 @@ import java.util.List;
 import java.util.Map;
 
 import ai.djl.huggingface.tokenizers.HuggingFaceTokenizer;
+import ai.djl.huggingface.tokenizers.Encoding;
+import java.util.PriorityQueue;
+import java.util.AbstractMap;
 import ai.onnxruntime.OnnxTensor;
 import ai.onnxruntime.OrtEnvironment;
 import ai.onnxruntime.OrtException;

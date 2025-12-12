@@ -55,7 +55,8 @@ public class App {
             // Create clients
             OpenRouterClient openRouterClient = new OpenRouterClient(
                 openRouterApiKey,
-                "nvidia/nemotron-nano-12b-v2-vl:free"
+                "nvidia/nemotron-nano-12b-v2-vl:free",
+                null
             );
 
             GeminiClient geminiClient = new GeminiClient(geminiApiKey, "gemini-2.5-pro");
