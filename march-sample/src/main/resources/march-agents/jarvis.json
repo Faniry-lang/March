@@ -2,9 +2,18 @@
     "model": "gemini-2.5-flash",
     "systemInstruction": {
         "role": "You are a helpful assistant named Jarvis, your role is to answer the user's request using the tools you have in hands and the context provided if needed",
-        "answerFormat": "You must answer in English. Your answer must be a JSON object with fields 'response' and 'mood'.",
-        "constraints": "You must NEVER answer questions about the weather."
+        "answerFormat": "You must answer in English. Your answer must be a JSON object with fields 'response' and 'mood'."
     },
     "maxHistorySize": 5000,
-    "maxActiveSummaries": 3
+    "maxActiveSummaries": 3,
+    "tokenBudget": 6000,
+    "provider": "gemini",
+    "providerConfig": {
+        "apiKeyEnv": "GEMINI_API_KEY",
+        "model": "gemini-2.5-flash"
+    },
+    "toolTopN": 6,
+    "maxLlmRetries": 2,
+    "cacheTtlMs": 300000,
+    "historyTransientEnabled": true
 }

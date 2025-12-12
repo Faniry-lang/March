@@ -14,6 +14,7 @@ import march.dev.data.Tool;
 import march.dev.data.ToolRegistry;
 import march.dev.llm.GeminiClient;
 import march.dev.llm.OpenRouterClient;
+// Removed Spring AI adapter import; using existing LLM clients instead
 import march.dev.utils.MethodRunner;
 import march.dev.utils.ProviderScan;
 
@@ -57,9 +58,11 @@ public class App {
                 "nvidia/nemotron-nano-12b-v2-vl:free"
             );
 
-            GeminiClient geminiClient = new GeminiClient(geminiApiKey, "gemini-2.5-flash");
+            GeminiClient geminiClient = new GeminiClient(geminiApiKey, "gemini-2.5-pro");
 
-            MyCustomAgent agent = new MyCustomAgent(openRouterClient, toolRegistry, methodRunner, objectMapper);
+            // Let Agent create its own LlmClient from agent config (per-agent provider)
+            // Pass `null` for llmClient so Agent uses LlmClientFactory with the jarvis.json settings
+            MyCustomAgent agent = new MyCustomAgent(null, toolRegistry, methodRunner, objectMapper);
 
             // Scanner for real-time input
             Scanner scanner = new Scanner(System.in);
@@ -79,12 +82,13 @@ public class App {
                     String response = agent.chat(userInput);
                     System.out.println("\nAI Response:\n" + response + "\n");
                 } catch (Exception e) {
+                    agent.closeChatSession();
                     System.out.println("Error generating response: " + e.getMessage());
                 }
             }
 
             scanner.close();
-
+            agent.closeChatSession();
         } catch (Exception e) {
             e.printStackTrace();
             System.out.println("Error: " + e.getMessage());

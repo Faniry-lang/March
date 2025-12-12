@@ -42,4 +42,41 @@ public class ToolRegistry {
         }
         return toolDtos;
     }
+
+    public Map<String, ToolDto> getRelevantTools(String agentId, String query, int topN) {
+        Map<String, ToolDto> all = getToolsForAgent(agentId);
+        if (query == null || query.isEmpty() || all.isEmpty()) return all;
+
+        String q = query.toLowerCase();
+
+        // simple keyword scoring on name+description
+        java.util.List<java.util.Map.Entry<String, ToolDto>> list = new java.util.ArrayList<>(all.entrySet());
+        list.sort((a, b) -> {
+            String aText = (a.getValue().name() + " " + a.getValue().description()).toLowerCase();
+            String bText = (b.getValue().name() + " " + b.getValue().description()).toLowerCase();
+            int aScore = scoreTextMatch(aText, q);
+            int bScore = scoreTextMatch(bText, q);
+            return Integer.compare(bScore, aScore);
+        });
+
+        Map<String, ToolDto> result = new LinkedHashMap<>();
+        int count = 0;
+        for (java.util.Map.Entry<String, ToolDto> e : list) {
+            if (count >= topN) break;
+            result.put(e.getKey(), e.getValue());
+            count++;
+        }
+
+        return result;
+    }
+
+    private static int scoreTextMatch(String text, String query) {
+        int score = 0;
+        for (String token : query.split("\\s+")) {
+            if (token.isEmpty()) continue;
+            if (text.contains(token)) score += 2;
+            if (text.contains(token + "s")) score += 1;
+        }
+        return score;
+    }
 }

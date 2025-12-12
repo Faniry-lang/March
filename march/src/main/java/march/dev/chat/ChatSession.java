@@ -1,8 +1,8 @@
 package march.dev.chat;
 
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -10,17 +10,21 @@ import march.dev.agent.Agent;
 import march.dev.data.Tool;
 import march.dev.data.ToolRegistry;
 import march.dev.process.LlmResponse;
+import march.dev.process.Message;
 import march.dev.process.Response;
 import march.dev.process.SystemResponse;
 import march.dev.utils.JsonUtils;
+import org.everit.json.schema.Schema;
+import org.everit.json.schema.ValidationException;
+import org.everit.json.schema.loader.SchemaLoader;
+import org.json.JSONObject;
 import march.dev.utils.MethodRunner;
-import march.dev.utils.TemplateUtils;
 
 public class ChatSession {
     
     String sessionId;
     Agent agent;
-    String history;
+    List<Message> historyMessages;
     ObjectMapper objectMapper;
     MethodRunner methodRunner;
     ToolRegistry toolRegistry;
@@ -38,55 +42,19 @@ public class ChatSession {
     }
 
     public void initHistory() throws Exception {
-        StringBuilder sb = new StringBuilder();
-        this.history = this.agent.getSystemPrompt();
-        sb.append("<chat-session>");
-        sb.append("<history>");
-            sb.append("<history-placeholder/>");
-        sb.append("</history>");
-        sb.append("<current-request-process>");
-            sb.append("<user-request>");
-                sb.append("<user-request-placeholder/>");
-            sb.append("</user-request>");
-            sb.append("<chain-of-thought>");
-                sb.append("<chain-placeholder/>");
-            sb.append("</chain-of-thought>");
-        sb.append("</current-request-process>");
-        sb.append("</chat-session>");
-        this.history += sb.toString();
+        this.historyMessages = new ArrayList<>();
+        String systemPrompt = this.agent.getSystemPrompt();
+        Message systemMessage = new Message("system", systemPrompt, null, null);
+        this.historyMessages.add(systemMessage);
     }
 
     public void setUserRequest(String userRequest) {
-        this.history = TemplateUtils.replace(this.history, "<user-request-placeholder/>", userRequest);
+        Message userMessage = new Message("user", userRequest, null, null);
+        this.historyMessages.add(userMessage);
     }
 
     public void endUserRequest() {
-        String currentUserRequestContent = TemplateUtils.getTagsContent(this.history, "user-request", false);
-        if (currentUserRequestContent == null) {
-            currentUserRequestContent = "";
-        }
-        
-        String currentChainOfThoughtContent = TemplateUtils.getTagsContent(this.history, "chain-of-thought", false);
-        if (currentChainOfThoughtContent == null) {
-            currentChainOfThoughtContent = "";
-        }
-        
-        String wholeCurrentRequestProcessContent = TemplateUtils.getTagsContent(this.history, "current-request-process", false);
-
-        String processRequestToAddToHistory;
-        if (wholeCurrentRequestProcessContent != null) {
-            processRequestToAddToHistory = "<history>"+wholeCurrentRequestProcessContent+"</history><history-placeholder/>";
-        } else {
-            processRequestToAddToHistory = "<history-placeholder/>";
-        }
-
-        LinkedHashMap<String, String> replacement = new LinkedHashMap<>();
-        
-        replacement.put(currentUserRequestContent, "<user-request-placeholder/>");
-        replacement.put(currentChainOfThoughtContent, "<chain-placeholder/>");
-        replacement.put("<history-placeholder/>", processRequestToAddToHistory);
-
-        this.history = TemplateUtils.multiReplace(this.history, replacement);
+        // This method is obsolete
     }
 
     public void initResponseChain() {
@@ -94,18 +62,223 @@ public class ChatSession {
     }
 
     public void writeResponseInHistory(Response response) throws Exception {
-        String responseTemplate = response.toXml();
-        responseTemplate += "<chain-placeholder/>";
-        this.history = TemplateUtils.replace(this.history, "<chain-placeholder/>", responseTemplate);
+        String respJson = response.toJson();
+        Message assistantMessage = new Message("assistant", respJson, null, null);
+        this.historyMessages.add(assistantMessage);
+        this.responseChain.add(response);
     }
 
     public LlmResponse getLlmResponse(String prompt) throws Exception {
-        String llmResponseString = agent.getLlmResponse(prompt);
-        String cleanedLlmResponseString = JsonUtils.cleanLlmResponse(llmResponseString);
-        LlmResponse response = objectMapper.readValue(cleanedLlmResponseString, LlmResponse.class);
-        this.responseChain.add(response);
-        this.writeResponseInHistory(response);
-        return response;
+
+        int tokenBudget = 4000;
+        try {
+            if (this.agent != null && this.agent.getConfig() != null) {
+                tokenBudget = this.agent.getConfig().getTokenBudget();
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        if (tokenBudget <= 0) {
+            String prop = System.getProperty("march.token.budget");
+            if (prop == null || prop.isEmpty()) {
+                prop = System.getenv("MARCH_TOKEN_BUDGET");
+            }
+            if (prop != null && !prop.isEmpty()) {
+                try {
+                    tokenBudget = Integer.parseInt(prop);
+                } catch (NumberFormatException nfe) {
+                    System.out.println("Invalid march.token.budget value '" + prop + "', using default: " + tokenBudget);
+                }
+            }
+        }
+        trimHistoryToTokenBudget(tokenBudget);
+
+        Schema validator = null;
+        try {
+            String systemPrompt = agent.getSystemPrompt();
+            if (systemPrompt != null && !systemPrompt.isEmpty()) {
+                com.fasterxml.jackson.databind.JsonNode root = objectMapper.readTree(systemPrompt);
+                com.fasterxml.jackson.databind.JsonNode schemaNode = root.path("marchFramework").path("responseSchema");
+                if (!schemaNode.isMissingNode() && !schemaNode.isNull()) {
+                    JSONObject rawSchema = new JSONObject(objectMapper.writeValueAsString(schemaNode));
+                    validator = SchemaLoader.load(rawSchema);
+                }
+            }
+        } catch (Exception e) {
+            // If schema extraction fails, proceed without validator (we still parse into POJO).
+            validator = null;
+        }
+
+        // Build function definitions for relevant tools and attach them to history as a 'functions' message
+        try {
+            String lastUser = null;
+            for (int i = this.historyMessages.size() - 1; i >= 0; i--) {
+                Message m = this.historyMessages.get(i);
+                if (m != null && "user".equals(m.getRole())) {
+                    lastUser = m.getContent();
+                    break;
+                }
+            }
+
+            int topN = 6;
+            try {
+                if (agent != null && agent.getConfig() != null) {
+                    topN = agent.getConfig().getToolTopN();
+                }
+            } catch (Exception e) {
+                topN = 6;
+            }
+            Map<String, march.dev.data.ToolDto> relevant = toolRegistry.getRelevantTools(agent.getId(), lastUser, topN);
+            if (relevant != null && !relevant.isEmpty()) {
+                java.util.List<java.util.Map<String, Object>> functions = march.dev.utils.FunctionDefinitionBuilder.buildFromToolDtos(relevant);
+                Message functionsMsg = new Message("functions", objectMapper.writeValueAsString(functions), null, null);
+                // remove any previous functions message to keep it fresh
+                this.historyMessages.removeIf(msg -> msg != null && "functions".equals(msg.getRole()));
+                this.historyMessages.add(functionsMsg);
+            }
+        } catch (Exception e) {
+            // ignore function build errors
+        }
+
+        int maxRetries = 2;
+        try {
+            if (agent != null && agent.getConfig() != null) {
+                maxRetries = agent.getConfig().getMaxLlmRetries();
+            }
+        } catch (Exception e) {
+            maxRetries = 2;
+        }
+        int attempt = 0;
+        String lastRaw = null;
+
+        while (true) {
+            lastRaw = agent.getLlmResponse(prompt);
+            String cleaned = JsonUtils.cleanLlmResponse(lastRaw);
+
+            try {
+                if (cleaned == null || cleaned.isEmpty()) {
+                    throw new IllegalArgumentException("No JSON found in model output");
+                }
+
+                // If a schema validator is available, validate the raw cleaned JSON first.
+                if (validator != null) {
+                    try {
+                        JSONObject candidate = new JSONObject(cleaned);
+                        validator.validate(candidate);
+                    } catch (ValidationException ve) {
+                        throw ve;
+                    }
+                }
+
+                // Parse into POJO
+                LlmResponse response = objectMapper.readValue(cleaned, LlmResponse.class);
+
+                // Basic validation fallback
+                if (validator == null && response.getStep() == 0 && (response.getModelAnswer() == null || response.getModelAnswer().isEmpty()) && !response.isFunctionCall()) {
+                    throw new IllegalArgumentException("Parsed LlmResponse is missing required content");
+                }
+
+                // Success
+                this.writeResponseInHistory(response);
+                return response;
+
+            } catch (ValidationException | IllegalArgumentException | com.fasterxml.jackson.core.JsonProcessingException parseEx) {
+                attempt++;
+                if (attempt > maxRetries) {
+                    throw new Exception("Unable to validate/parse LLM response into LlmResponse after " + maxRetries + " retries. Last raw output: " + lastRaw, parseEx);
+                }
+
+                // Build a short correction prompt that references the schema and gives an example
+                String correctionExample = "{\"step\":1,\"modelThought\":\"Think step\",\"modelAnswer\":\"Concise answer\",\"functionCall\":false}";
+
+                String correctionInstruction;
+                try {
+                    String systemJson = agent.getSystemPrompt();
+                    correctionInstruction = systemJson + "\n\nThe previous assistant output could not be parsed/validated as JSON (error: "
+                            + parseEx.getMessage() + ").\nPrevious output:\n" + lastRaw
+                            + "\nPlease RETURN ONLY a single JSON object that matches the MARCH framework response schema. Example: "
+                            + correctionExample + "\nDo not include any explanation or markdown.\n";
+                } catch (Exception e) {
+                    correctionInstruction = "The previous assistant output could not be parsed/validated as JSON (error: "
+                            + parseEx.getMessage() + ").\nPrevious output:\n" + lastRaw
+                            + "\nPlease RETURN ONLY a single JSON object that matches the MARCH framework response schema. Example: "
+                            + correctionExample + "\nDo not include any explanation or markdown.\n";
+                }
+
+                // Use the correction instruction as the new prompt to the model for a corrected JSON
+                prompt = correctionInstruction;
+                // loop and retry
+                continue;
+            }
+        }
+    }
+
+    private int estimateTokensForMessage(Message m) {
+        if (m == null || m.getContent() == null) return 0;
+        int chars = m.getContent().length();
+        // rough heuristic: 1 token ~= 4 chars
+        return Math.max(1, chars / 4 + 3);
+    }
+
+    private int estimateTokensForMessages(List<Message> messages) {
+        int total = 0;
+        if (messages == null) return 0;
+        for (Message m : messages) {
+            total += estimateTokensForMessage(m);
+        }
+        return total;
+    }
+
+    private void trimHistoryToTokenBudget(int maxTokens) {
+        try {
+            int estimated = estimateTokensForMessages(this.historyMessages);
+            if (estimated <= maxTokens) return;
+
+            // Preserve system message at index 0
+            int preserveCount = 1;
+
+            while (estimated > maxTokens && this.historyMessages.size() > preserveCount + 1) {
+                // Build a chunk from the oldest non-system messages (take up to 4)
+                int take = Math.min(4, this.historyMessages.size() - preserveCount - 0);
+                StringBuilder chunk = new StringBuilder();
+                int removed = 0;
+                for (int i = preserveCount; i < preserveCount + take && i < this.historyMessages.size(); i++) {
+                    Message m = this.historyMessages.get(i);
+                    chunk.append("[").append(m.getRole()).append("] ").append(m.getContent()).append("\n");
+                    removed++;
+                }
+
+                if (chunk.length() == 0) break;
+
+                String summPrompt = "Summarize the following conversation chunk concisely in 1-2 sentences. Return only the summary text:\n" + chunk.toString();
+
+                String summary = null;
+                try {
+                    summary = agent.getLlmResponse(summPrompt);
+                    if (summary == null) summary = "";
+                } catch (Exception e) {
+                    summary = "";
+                }
+
+                // Remove the taken messages and replace with a summary message
+                for (int i = 0; i < removed; i++) {
+                    // always remove at preserveCount index as list shifts
+                    if (this.historyMessages.size() > preserveCount)
+                        this.historyMessages.remove(preserveCount);
+                }
+
+                Message summaryMsg = new Message("summary", summary, null, null);
+                this.historyMessages.add(preserveCount, summaryMsg);
+
+                estimated = estimateTokensForMessages(this.historyMessages);
+            }
+        } catch (Exception e) {
+            // best-effort: if trimming fails, fall back to dropping oldest messages until under budget
+            while (estimateTokensForMessages(this.historyMessages) > maxTokens && this.historyMessages.size() > 1) {
+                this.historyMessages.remove(1);
+            }
+        }
     }
 
     public void executeOrder(LlmResponse response) throws Exception {
@@ -113,10 +286,15 @@ public class ChatSession {
         Object[] args = response.getOrderedAndTypedArgs(toolRegistry, objectMapper);
         Object result = methodRunner.execute(tool, args);
         String resultJson = objectMapper.writeValueAsString(result);
+        Object[] toolArgs = new Object[0];
+        if (response.getArguments() != null) {
+            toolArgs = response.getArguments().values().toArray();
+        }
+
         SystemResponse systemResponse = new SystemResponse(response.getStep(), response.getToolName(),
-                resultJson, response.getArguments().values().toArray());
+            resultJson, toolArgs);
         this.responseChain.add(systemResponse);
-        this.writeResponseInHistory(response);
+        this.writeResponseInHistory(systemResponse);
     }
 
     public String getSessionId() {
@@ -140,12 +318,19 @@ public class ChatSession {
 
 
     public String getHistory() {
-        return history;
+        try {
+            java.util.Map<String, Object> wrapper = new java.util.HashMap<>();
+            wrapper.put("messages", this.historyMessages);
+            return objectMapper.writeValueAsString(wrapper);
+        } catch (Exception e) {
+            return "";
+        }
     }
 
 
     public void setHistory(String history) {
-        this.history = history;
+        this.historyMessages = new ArrayList<>();
+        this.historyMessages.add(new Message("system", history, null, null));
     }
 
 

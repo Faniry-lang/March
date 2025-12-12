@@ -17,8 +17,9 @@ import march.dev.process.LlmResponse;
 import march.dev.annotations.AgentId;
 import march.dev.chat.ChatSession;
 import march.dev.utils.MethodRunner;
-import march.dev.utils.ResourceUtils;
+import java.util.LinkedHashMap;
 import march.dev.history.HistoryService;
+import march.dev.llm.LlmClientFactory;
 
 public abstract class Agent {
 
@@ -39,7 +40,8 @@ public abstract class Agent {
             ObjectMapper objectMapper) {
         this.llmClient = llmClient;
         this.toolRegistry = toolRegistry;
-        this.methodRunner = methodRunner;
+        // create a per-agent MethodRunner (namespaced cache keys)
+        this.methodRunner = new MethodRunner();
         this.objectMapper = objectMapper;
 
         if (this.getClass().isAnnotationPresent(AgentId.class)) {
@@ -47,7 +49,31 @@ public abstract class Agent {
             this.id = agentAnnotation.value();
             try {
                 this.config = ConfigLoader.loadConfig(this.id);
+
+                // If no llmClient was provided, try to construct one from config
+                if (this.llmClient == null) {
+                    System.out.println("LlmClient not provided, attempting to create from agent config...");
+                    try {
+                        LlmClient created = LlmClientFactory.createFromConfig(this.config);
+                        if (created != null) this.llmClient = created;
+                    } catch (Exception e) {
+                        System.out.println("Could not create LlmClient from config: " + e.getMessage());
+                    }
+                }
+
+                // create history service (may require llmClient for summarization)
                 this.historyService = new HistoryService(this.id, this.llmClient, this.objectMapper);
+
+                // Create a per-agent ToolResultCache and MethodRunner using config TTL
+                try {
+                    long ttl = 5 * 60 * 1000;
+                    if (this.config != null && this.config.getCacheTtlMs() > 0) ttl = this.config.getCacheTtlMs();
+                    march.dev.utils.ToolResultCache agentCache = new march.dev.utils.ToolResultCache(ttl);
+                    this.methodRunner = new MethodRunner(this.id, agentCache);
+                } catch (Exception e) {
+                    // fallback: keep existing methodRunner
+                }
+
             } catch (Exception e) {
                 System.out.println("Could not load config for agent " + this.id + ": " + e.getMessage());
             }
@@ -87,10 +113,25 @@ public abstract class Agent {
     }
 
     public void openChatSession() throws Exception {
-        String sessionId = UUID.randomUUID().toString();
-        this.chatSession = new ChatSession(
-            sessionId, this, this.objectMapper, this.methodRunner, this.toolRegistry
-        );
+        if (this.chatSession == null) {
+            String sessionId = UUID.randomUUID().toString();
+            this.chatSession = new ChatSession(
+                sessionId, this, this.objectMapper, this.methodRunner, this.toolRegistry
+            );
+        }
+    }
+
+    public void closeChatSession() {
+        try {
+            if (this.historyService != null) {
+                this.historyService.deleteTransientHistory();
+            } else {
+                Files.deleteIfExists(Paths.get("src/main/resources/history.json"));
+            }
+        } catch (Exception e) {
+            System.out.println("Unable to delete history.json: " + e.getMessage());
+        }
+        this.chatSession = null;
     }
 
     public void startChainOfThought(String userRequest) throws Exception {
@@ -119,7 +160,16 @@ public abstract class Agent {
                     continue;
                 }
 
-                Files.writeString(Paths.get("src/main/resources/history.xml"), this.chatSession.getHistory());
+                try {
+                    String historyJson = objectMapper.writeValueAsString(java.util.Map.of("history", this.chatSession.getHistory()));
+                    if (this.historyService != null) {
+                        this.historyService.writeTransientHistory(historyJson);
+                    } else {
+                        Files.writeString(Paths.get("src/main/resources/history.json"), historyJson);
+                    }
+                } catch (Exception ex) {
+                    System.out.println("Unable to write history json: " + ex.getMessage());
+                }
                 this.chatSession.endUserRequest();
                 return response.getModelAnswer();
 
@@ -141,44 +191,56 @@ public abstract class Agent {
     }
 
     public String getSystemPrompt() throws Exception {
-        String toolJson = "";
         try {
-            toolJson = objectMapper.writeValueAsString(toolRegistry.getToolsForAgent(this.id));
-        } catch (JsonProcessingException e) {
-            e.printStackTrace();
-            throw new Exception("Error during tool serialization: " + e.getMessage());
+            LinkedHashMap<String, Object> root = new LinkedHashMap<>();
+            root.put("agentId", this.id);
+
+            Object toolsForAgent = toolRegistry.getToolsForAgent(this.id);
+            root.put("tools", toolsForAgent != null ? toolsForAgent : new LinkedHashMap<>());
+
+            if (this.config != null && this.config.getSystemInstruction() != null) {
+                root.put("developerInstruction", this.config.getSystemInstruction());
+            }
+
+            if (!this.context.isEmpty()) {
+                root.put("userContext", this.context);
+            }
+
+            java.util.Map<String, Object> marchFramework = new java.util.LinkedHashMap<>();
+
+            java.util.Map<String, Object> schema = new java.util.LinkedHashMap<>();
+            schema.put("type", "object");
+            java.util.Map<String, Object> props = new java.util.LinkedHashMap<>();
+            props.put("step", java.util.Map.of("type", "integer"));
+            props.put("modelThought", java.util.Map.of("type", "string"));
+            props.put("modelAnswer", java.util.Map.of("type", "string"));
+            props.put("functionCall", java.util.Map.of("type", "boolean"));
+            props.put("toolName", java.util.Map.of("type", "string", "nullable", true));
+            props.put("arguments", java.util.Map.of("type", "object", "nullable", true));
+            schema.put("properties", props);
+            schema.put("required", java.util.List.of("step", "modelThought", "modelAnswer", "functionCall"));
+
+            marchFramework.put("responseSchema", schema);
+
+            java.util.Map<String, Object> example = new java.util.LinkedHashMap<>();
+            example.put("step", 1);
+            example.put("modelThought", "I should check tools before answering.");
+            example.put("modelAnswer", "Here is a concise answer to the user request.");
+            example.put("functionCall", false);
+
+            marchFramework.put("exampleResponse", example);
+
+            marchFramework.put("note", "Step is the current step of the user request process, modelThought is YOUR thought process, modelAnswer is YOUR answer for the user request. Return ONLY a single JSON object matching 'responseSchema'. Do not include any markdown, explanation, or extra text.");
+
+            root.put("marchFramework", marchFramework);
+
+            return objectMapper.writeValueAsString(root);
+        } catch (Exception e) {
+            throw new Exception("Error building compact system prompt: " + e.getMessage(), e);
         }
+    }
 
-        String systemPromptTemplate = ResourceUtils.readResourceFile("march-agent-system-prompt.xml");
-
-        String prompt = systemPromptTemplate.replace("[PLACEHOLDER: toolJson goes here, detailing tool names, functions, and arguments.]", toolJson);
-
-        StringBuilder additionalInstructions = new StringBuilder();
-        additionalInstructions.append("<agent-info>");
-        additionalInstructions.append("    <agent-id>").append(this.id).append("</agent-id>");
-        additionalInstructions.append("    <archived-summaries-instruction>Use [ARCHIVED_SUMMARY id=\"...\"] to refer to past summaries. Load details via 'getHistoryById'.</archived-summaries-instruction>");
-        additionalInstructions.append("</agent-info>");
-
-        StringBuilder developerInstruction = new StringBuilder();
-        if (this.config != null && this.config.getSystemInstruction() != null) {
-            developerInstruction.append("<developer-instruction>");
-            this.config.getSystemInstruction().forEach((k, v) -> developerInstruction.append("    <").append(k.toLowerCase()).append(">").append(v).append("</").append(k.toLowerCase()).append(">"));
-            developerInstruction.append("    <important>These instructions apply only to 'modelAnswer'. JSON structure from [MARCH_FRAMEWORK_INSTRUCTION] must always be followed.</important>");
-            developerInstruction.append("</developer-instruction>");
-        }
-
-        StringBuilder userContext = new StringBuilder();
-        if (!context.isEmpty()) {
-            userContext.append("<user-context>");
-            context.forEach((k, v) -> userContext.append("    <").append(k.toLowerCase()).append(">").append(v).append("</").append(k.toLowerCase()).append(">"));
-            userContext.append("    <important>The above context is provided by the developer. Use it to answer user questions accurately.</important>");
-            userContext.append("</user-context>");
-        }
-        
-        prompt = prompt.replace("[PLACEHOLDER: agent-info]", additionalInstructions.toString());
-        prompt = prompt.replace("[PLACEHOLDER: developer-instruction]", developerInstruction.toString());
-        prompt = prompt.replace("[PLACEHOLDER: user-context]", userContext.toString());
-
-        return prompt;
+    public march.dev.config.AgentConfig getConfig() {
+        return this.config;
     }
 }

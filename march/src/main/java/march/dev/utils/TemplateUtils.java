@@ -22,7 +22,7 @@ public class TemplateUtils {
 
     public static String getTagsContent(String template, String tagName, boolean tagsIncluded) {
         String openingTag = "<"+tagName+">";
-        String closingTag = "<"+tagName+"/>";
+        String closingTag = "</"+tagName+">";
         if(tagsIncluded) {
             return RegexUtils.getContentIncludingDelimiters(template, openingTag, closingTag);
         }

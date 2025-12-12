@@ -66,6 +66,18 @@
         <version>4.11.0</version>
     </dependency>
 
+    <!-- https://mvnrepository.com/artifact/com.github.erosb/everit-json-schema -->
+    <dependency>
+        <groupId>com.github.erosb</groupId>
+        <artifactId>everit-json-schema</artifactId>
+        <version>1.14.6</version>
+    </dependency>
+    <dependency>
+      <groupId>org.json</groupId>
+      <artifactId>json</artifactId>
+      <version>20230227</version>
+    </dependency>
+    <!-- Spring AI dependencies removed: using local LlmClient implementations instead -->
   </dependencies>
 
   <build>

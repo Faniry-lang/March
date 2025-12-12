@@ -8,7 +8,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import march.dev.data.Tool;
 import march.dev.data.ToolRegistry;
-import march.dev.utils.TemplateUtils;
 
 public class LlmResponse implements Response {
     int step;
@@ -18,38 +17,24 @@ public class LlmResponse implements Response {
     String toolName;
     Map<String, Object> arguments;
 
-    @Override
-    public String toXml() throws Exception {
-        String content = this.contentToXml();
-        String messageTemplate = TemplateUtils.getMessageTemplate();
-        messageTemplate = TemplateUtils.replace(messageTemplate, "<content-placeholder/>", content);
-        messageTemplate = TemplateUtils.replace(messageTemplate, "<role-placeholder/>", "agent");
-        return messageTemplate;
-    }
+    private static final ObjectMapper MAPPER = new ObjectMapper();
 
-    public String contentToXml() {
-        StringBuilder sb = new StringBuilder();
-        sb.append("<llm-response>");
-        sb.append("<step>").append(this.step).append("</step>");
-        sb.append("<modelThought>").append(this.modelThought).append("</modelThought>");
-        sb.append("<tool-details>");
-        sb.append("<functionCall>").append(this.functionCall).append("</functionCall>");
+    @Override
+    public String toJson() throws Exception {
+        java.util.Map<String, Object> root = new java.util.LinkedHashMap<>();
+        root.put("step", this.step);
+        root.put("modelThought", this.modelThought);
+
+        java.util.Map<String, Object> toolDetails = new java.util.LinkedHashMap<>();
+        toolDetails.put("functionCall", this.functionCall);
         if (this.functionCall) {
-            sb.append("<toolName>").append(this.toolName).append("</toolName>");
-            sb.append("<arguments>");
-            if (this.arguments != null) {
-                for (Map.Entry<String, Object> entry : this.arguments.entrySet()) {
-                    sb.append("<").append(entry.getKey()).append(">");
-                    sb.append(entry.getValue());
-                    sb.append("</").append(entry.getKey()).append(">");
-                }
-            }
-            sb.append("</arguments>");
+            toolDetails.put("toolName", this.toolName);
+            toolDetails.put("arguments", this.arguments != null ? this.arguments : new java.util.HashMap<>());
         }
-        sb.append("</tool-details>");
-        sb.append("<modelAnswer>").append(this.modelAnswer).append("</modelAnswer>");
-        sb.append("</llm-response>");
-        return sb.toString();
+        root.put("toolDetails", toolDetails);
+        root.put("modelAnswer", this.modelAnswer);
+
+        return MAPPER.writeValueAsString(root);
     }
 
     public LlmResponse() {
@@ -130,7 +115,7 @@ public class LlmResponse implements Response {
             String paramName = entry.getKey();
             java.lang.reflect.Type paramType = entry.getValue();
 
-            if (arguments.containsKey(paramName)) {
+            if (arguments != null && arguments.containsKey(paramName)) {
                 Object argValue = arguments.get(paramName);
 
                 Object typedArg = objectMapper.convertValue(argValue, objectMapper.constructType(paramType));

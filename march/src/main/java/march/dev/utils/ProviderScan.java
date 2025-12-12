@@ -36,9 +36,7 @@ public class ProviderScan {
                 Class<?> clazz = Class.forName(className);
 
                 if (clazz.isAnnotationPresent(LlmContextProvider.class)) {
-                    LlmContextProvider providerAnnotation = clazz.getAnnotation(LlmContextProvider.class);
                     String providerName = clazz.getName();
-                    List<String> providerAccess = Arrays.asList(providerAnnotation.access());
 
                     for (Method method : clazz.getDeclaredMethods()) {
                         if (method.isAnnotationPresent(LlmTool.class)) {
@@ -56,7 +54,7 @@ public class ProviderScan {
                             }
 
                             Type returnType = method.getGenericReturnType();
-                            List<String> toolAccess = new ArrayList<>(providerAccess);
+                            List<String> toolAccess = new ArrayList<>();
                             toolAccess.addAll(Arrays.asList(toolAnnotation.access()));
 
                             Tool tool = new Tool(name, description, providerName, method, paramMap, returnType,
