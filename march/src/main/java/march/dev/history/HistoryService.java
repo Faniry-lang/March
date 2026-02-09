@@ -28,7 +28,7 @@ public class HistoryService {
         // 1) honor system property `march.history.dir`
         // 2) prefer local project resources `src/main/resources/march-history/<agentId>/` if writable
         // 3) fallback to user home `~/.march/history/<agentId>/`
-        String explicit = System.getProperty("march.history.dir");
+        String explicit = march.dev.config.PropertyUtils.getPreferred("march.history.dir");
         if (explicit != null && !explicit.isBlank()) {
             this.historyDir = explicit.endsWith("/") ? explicit + agentId + "/" : explicit + "/" + agentId + "/";
         } else {

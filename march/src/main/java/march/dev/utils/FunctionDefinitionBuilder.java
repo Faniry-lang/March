@@ -66,7 +66,8 @@ public class FunctionDefinitionBuilder {
     private static String mapTypeNameToJsonType(String javaType) {
         if (javaType == null) return "string";
         javaType = javaType.toLowerCase();
-        if (javaType.contains("int") || javaType.contains("long") || javaType.contains("integer") || javaType.contains("double")|| javaType.contains("float")) return "number";
+        if (javaType.contains("int") || javaType.contains("long") || javaType.contains("integer")) return "integer";
+        if (javaType.contains("double") || javaType.contains("float") || javaType.contains("number")) return "number";
         if (javaType.contains("bool")) return "boolean";
         if (javaType.contains("map") || javaType.contains("list") || javaType.contains("java.util")) return "object";
         return "string";

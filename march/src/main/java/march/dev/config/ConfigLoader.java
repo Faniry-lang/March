@@ -58,22 +58,6 @@ public class ConfigLoader {
 
             // If still null, throw to be handled by the catch below which returns default
             if (config == null) throw new java.io.IOException("Agent config not found for '" + agentId + "' (tried filesystem and classpath)");
-
-            // Debug: print raw file content and the deserialized AgentConfig
-            try {
-                if (filePath != null) {
-                    String raw = java.nio.file.Files.readString(java.nio.file.Paths.get(filePath));
-                    System.out.println("[ConfigLoader] Raw config file content for '" + agentId + "':\n" + raw);
-                }
-            } catch (Exception e) {
-                // ignore raw read errors for classpath-loaded configs
-            }
-            try {
-                String cfgJson = objectMapper.writeValueAsString(config);
-                System.out.println("[ConfigLoader] Deserialized AgentConfig for '" + agentId + "':\n" + cfgJson);
-            } catch (Exception e) {
-                System.out.println("[ConfigLoader] Unable to serialize AgentConfig for debug output: " + e.getMessage());
-            }
             
             // If tokenBudget is not set or invalid in the file, load from properties or env
             if (config.getTokenBudget() <= 0) {

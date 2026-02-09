@@ -5,11 +5,11 @@
     },
     "maxHistorySize": 5000,
     "maxActiveSummaries": 3,
-    "tokenBudget": 6000,
+    "tokenBudget": 2000,
     "provider": "openrouter",
     "providerConfig": {
         "apiKeyEnv": "OPENROUTER_API_KEY",
-        "model": "deepseek/deepseek-r1"
+        "model": "amazon/nova-2-lite-v1:free"
     },
     "toolTopN": 6,
     "maxLlmRetries": 2,

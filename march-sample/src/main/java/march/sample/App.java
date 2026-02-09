@@ -84,6 +84,7 @@ public class App {
             for (String request : testRequests) {
                 System.out.println("\n=== User Request ===\n" + request + "\n");
                 try {
+                    System.out.println(agent.getSystemPrompt());
                     String response = agent.chat(request);
                     System.out.println("=== AI Response ===\n" + response + "\n");
                 } catch (Exception e) {

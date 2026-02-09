@@ -99,4 +99,38 @@ public class EmbeddingService {
 
         return topTools;
     }
+
+    /**
+     * Lightweight fallback selector that uses simple token overlap / TF scoring when
+     * full ONNX/tokenizer resources are not available. This method accepts tool
+     * descriptions (e.g. name + description) and returns the top-N tool descriptions
+     * ordered by a simple textual similarity heuristic.
+     */
+    public static List<String> findTopToolsSimple(String userRequest, List<String> tools, int n) {
+        if (userRequest == null || userRequest.isBlank() || tools == null || tools.isEmpty()) return java.util.Collections.emptyList();
+
+        String q = userRequest.toLowerCase();
+        java.util.PriorityQueue<java.util.Map.Entry<String, Integer>> pq = new java.util.PriorityQueue<>(
+            java.util.Comparator.comparingInt(java.util.Map.Entry::getValue)
+        );
+
+        for (String toolDesc : tools) {
+            String text = toolDesc.toLowerCase();
+            int score = 0;
+            for (String tok : q.split("\\s+")) {
+                if (tok.isEmpty()) continue;
+                if (text.contains(tok)) score += 3;
+                if (text.contains(tok + "s")) score += 1;
+            }
+            pq.offer(new java.util.AbstractMap.SimpleEntry<>(toolDesc, score));
+            if (pq.size() > n) pq.poll();
+        }
+
+        List<String> out = new ArrayList<>();
+        List<java.util.Map.Entry<String, Integer>> tmp = new ArrayList<>();
+        while (!pq.isEmpty()) tmp.add(pq.poll());
+        Collections.reverse(tmp);
+        for (java.util.Map.Entry<String, Integer> e : tmp) out.add(e.getKey());
+        return out;
+    }
 }   

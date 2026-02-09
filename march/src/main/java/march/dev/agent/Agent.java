@@ -14,6 +14,7 @@ import march.dev.config.ConfigLoader;
 import march.dev.data.ToolRegistry;
 import march.dev.llm.LlmClient;
 import march.dev.process.LlmResponse;
+import march.dev.process.Message;
 import march.dev.annotations.AgentId;
 import march.dev.chat.ChatSession;
 import march.dev.utils.MethodRunner;
@@ -161,6 +162,15 @@ public abstract class Agent {
                 }
 
                 try {
+                    // Compact in-memory history to keep only the user request and the final assistant answer
+                    String lastUser = null;
+                    for (int i = this.chatSession.getHistoryMessages().size() - 1; i >= 0; i--) {
+                        Message m = this.chatSession.getHistoryMessages().get(i);
+                        if (m != null && "user".equals(m.getRole())) { lastUser = m.getContent(); break; }
+                    }
+                    String assistantContent = response != null ? response.toJson() : "";
+                    this.chatSession.compactHistory(lastUser, assistantContent);
+
                     String historyJson = objectMapper.writeValueAsString(java.util.Map.of("history", this.chatSession.getHistory()));
                     if (this.historyService != null) {
                         this.historyService.writeTransientHistory(historyJson);
@@ -195,8 +205,20 @@ public abstract class Agent {
             LinkedHashMap<String, Object> root = new LinkedHashMap<>();
             root.put("agentId", this.id);
 
-            Object toolsForAgent = toolRegistry.getToolsForAgent(this.id);
-            root.put("tools", toolsForAgent != null ? toolsForAgent : new LinkedHashMap<>());
+            // Do NOT include the full tools list in the system prompt to save tokens.
+            // The runtime will attach relevant function schemas as a separate "functions" message.
+            // Keep only a compact list of tool names so model is aware of capabilities (optional).
+            try {
+                Object toolsForAgent = toolRegistry.getToolsForAgent(this.id);
+                if (toolsForAgent != null && toolsForAgent instanceof java.util.Map) {
+                    java.util.Map<?, ?> m = (java.util.Map<?, ?>) toolsForAgent;
+                    java.util.List<String> names = new java.util.ArrayList<>();
+                    for (Object k : m.keySet()) names.add(k.toString());
+                    root.put("tools", names);
+                }
+            } catch (Exception e) {
+                // fallback: omit tools entirely
+            }
 
             if (this.config != null && this.config.getSystemInstruction() != null) {
                 root.put("developerInstruction", this.config.getSystemInstruction());

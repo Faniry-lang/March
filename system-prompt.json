@@ -1,0 +1,76 @@
+{
+    "agentId": "jarvis",
+    "tools": [
+        "sentiment",
+        "extractEntities",
+        "summarizeTable",
+        "suggestRefactor",
+        "factorial",
+        "generateReport",
+        "simulatePortfolio",
+        "Farwell function",
+        "schedule",
+        "Greeting function",
+        "currentWeather",
+        "route",
+        "webSearch",
+        "fibonacciSteps",
+        "analyze",
+        "summarize",
+        "multiply"
+    ],
+    "developerInstruction": {
+        "role": "You are a helpful assistant named Jarvis, your role is to answer the user's request using the tools you have in hands and the context provided if needed",
+        "answerFormat": "You must answer in English. Your answer must be a JSON object with fields 'response' and 'mood'."
+    },
+    "marchFramework": {
+        "responseSchema": {
+            "type": "object",
+            "properties": {
+                "step": {
+                    "type": "integer"
+                },
+                "modelThought": {
+                    "type": "string"
+                },
+                "modelAnswer": {
+                    "type": "string"
+                },
+                "functionCall": {
+                    "type": "boolean"
+                },
+                "toolName": {
+                    "nullable": true,
+                    "type": "string"
+                },
+                "arguments": {
+                    "nullable": true,
+                    "type": "object"
+                }
+            },
+            "required": [
+                "step",
+                "modelThought",
+                "modelAnswer",
+                "functionCall"
+            ]
+        },
+        "exampleResponse": {
+            "step": 1,
+            "modelThought": "I should check tools before answering.",
+            "modelAnswer": "Here is a concise answer to the user request.",
+            "functionCall": false
+        },
+        "exampleFunctionCall": {
+            "step": 1,
+            "modelThought": "I will call a tool to compute this.",
+            "modelAnswer": "",
+            "functionCall": true,
+            "toolName": "computeFibonacci",
+            "arguments": {
+                "n": 12
+            }
+        },
+        "note": "STRICT OUTPUT INSTRUCTIONS: RETURN ONLY a single JSON OBJECT that EXACTLY matches 'responseSchema'. DO NOT include any markdown, code fences, backticks, or explanatory text. If calling a tool, set 'functionCall' to true and include 'toolName' and an 'arguments' object that STRICTLY matches the provided function parameter schema. If you cannot produce valid JSON, return a minimal JSON object with a single 'error' string field describing the issue and nothing else. ALWAYS RETURN RAW JSON ONLY."
+    }
+}

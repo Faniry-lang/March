@@ -68,6 +68,30 @@ public class ChatSession {
         this.responseChain.add(response);
     }
 
+    /**
+     * Compact in-memory history to keep only: system message, the provided user message,
+     * and the provided assistant content. This helps limit in-memory and persisted
+     * history size so future prompts remain small.
+     */
+    public void compactHistory(String userMessage, String assistantContent) {
+        try {
+            // preserve original system message if present
+            Message system = null;
+            if (this.historyMessages != null && !this.historyMessages.isEmpty()) {
+                for (Message m : this.historyMessages) {
+                    if (m != null && "system".equals(m.getRole())) { system = m; break; }
+                }
+            }
+
+            this.historyMessages = new ArrayList<>();
+            if (system != null) this.historyMessages.add(system);
+            if (userMessage != null) this.historyMessages.add(new Message("user", userMessage, null, null));
+            if (assistantContent != null) this.historyMessages.add(new Message("assistant", assistantContent, null, null));
+        } catch (Exception e) {
+            // best-effort: if compaction fails, do not crash
+        }
+    }
+
     public LlmResponse getLlmResponse(String prompt) throws Exception {
 
         int tokenBudget = 4000;
@@ -80,10 +104,7 @@ public class ChatSession {
         }
 
         if (tokenBudget <= 0) {
-            String prop = System.getProperty("march.token.budget");
-            if (prop == null || prop.isEmpty()) {
-                prop = System.getenv("MARCH_TOKEN_BUDGET");
-            }
+            String prop = march.dev.config.PropertyUtils.getPreferred("march.token.budget");
             if (prop != null && !prop.isEmpty()) {
                 try {
                     tokenBudget = Integer.parseInt(prop);
@@ -358,5 +379,13 @@ public class ChatSession {
 
     public void setObjectMapper(ObjectMapper objectMapper) {
         this.objectMapper = objectMapper;
+    }
+
+    public List<Message> getHistoryMessages() {
+        return historyMessages;
+    }
+
+    public void setHistoryMessages(List<Message> historyMessages) {
+        this.historyMessages = historyMessages;
     }
 }
