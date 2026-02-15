@@ -11,6 +11,7 @@ This is a **student project** created for fun and learning. It is primarily inte
 - [ ] Implement advanced **Summarized Context** (currently simple truncation).
 - [ ] Implement **Smarter Tool Selection** using Embeddings (Vector search for relevant tools).
 - [ ] Add support for more LLM providers (native OpenAI/Claude).
+- [ ] Document how various providers (Google, OpenAI, Anthropic) handle **tokenization** vs raw character counts.
 
 ---
 
@@ -81,8 +82,20 @@ public class FinanceAgent extends Agent {
 
     @Override
     public CostPerPrompt onAgentUsage(DetailedPromptInfo info) {
-        // Calculate your own apiCost and computeCost here
-        return new CostPerPrompt();
+        CostPerPrompt cost = new CostPerPrompt();
+        
+        // Example logic for Gemini 2.0 Flash pricing
+        // Input: $0.10 / 1M tokens (~4M chars)
+        // Output: $0.40 / 1M tokens (~4M chars)
+        double apiCost = (info.getInputTokenLength() / 4_000_000.0) * 0.10 
+                       + (info.getOutPutTokenLength() / 4_000_000.0) * 0.40;
+        
+        // Example compute cost: $0.01 per second
+        double computeCost = (info.getProcessingTime() / 1000.0) * 0.01;
+        
+        cost.setApiCost(apiCost);
+        cost.setComputeCost(computeCost);
+        return cost;
     }
 }
 ```
