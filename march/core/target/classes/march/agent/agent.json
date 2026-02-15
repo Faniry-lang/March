@@ -1,0 +1,24 @@
+{
+  "title": "March Agent Spec",
+  "instructions": "Return ONLY a single JSON object (no extra text). The object must match the Response schema exactly.",
+  "responseSchema": [
+    "stepId:number",
+    "reasoningSummary:string",
+    "toolCall:boolean",
+    "finalAnswer:string|null",
+    "toolName:string|null",
+    "toolArgs:object|null"
+  ],
+  "requestFields": [
+    "model",
+    "systemPrompt",
+    "message",
+    "steps",
+    "currentState",
+    "tools"
+  ],
+  "examples": {
+    "toolCall": "{\"stepId\":1,\"reasoningSummary\":\"Call tool\",\"toolCall\":true,\"finalAnswer\":null,\"toolName\":\"getWeather\",\"toolArgs\":{\"location\":\"Paris\"}}",
+    "finalAnswer": "{\"stepId\":1,\"reasoningSummary\":\"Answer\",\"toolCall\":false,\"finalAnswer\":\"Done\",\"toolName\":null,\"toolArgs\":null}"
+  }
+}

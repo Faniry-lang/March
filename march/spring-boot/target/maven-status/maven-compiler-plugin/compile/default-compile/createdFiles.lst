@@ -1,0 +1,7 @@
+march\bootstrap\MarchInitializer$ToolRecord.class
+march\utils\SpringBootProviderScan$1.class
+march\bootstrap\SpringBootMarchAgentFactory.class
+march\utils\SpringBootProviderScan.class
+march\bootstrap\MarchInitializer.class
+march\bootstrap\AgentFactory.class
+march\bootstrap\AgentScanner.class
