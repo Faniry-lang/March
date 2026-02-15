@@ -2,6 +2,8 @@
 
 > **Author**: Ranaivoson Mazà Faniriniaina (@Faniry-lang)
 
+<img width="727" height="290" alt="march-cli" src="https://github.com/user-attachments/assets/c7fd7108-a8d6-41fb-9f87-b998f9d83bbf" />
+
 ---
 
 ### ⚠️ Disclaimer
